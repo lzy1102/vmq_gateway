@@ -40,7 +40,6 @@ func main() {
 	admin := r.Group("/admin")
 	admin.POST("/login", handler.Login)
 	admin.POST("/logout", handler.Logout)
-	admin.StaticFile("/", "./static/admin.html")
 
 	protected := admin.Group("")
 	protected.Use(middleware.RequireAuth())
@@ -53,10 +52,6 @@ func main() {
 		protected.POST("/binding", handler.AddBinding)
 		protected.GET("/bindings", handler.ListBindings)
 	}
-
-	// 5. 静态文件
-	r.StaticFile("/", "./static/index.html")
-	r.StaticFile("/qr/alipay.png", "./static/qr/alipay.png")
 
 	// 6. 启动
 	log.Printf("V免签支付网关启动 → %s", config.ListenAddr)

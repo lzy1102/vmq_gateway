@@ -12,14 +12,24 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
     restart: always
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - MONGO_URI=mongodb://mongo:27017
       - ADMIN_USER=admin
       - ADMIN_PASS=vmq_gateway
     depends_on:
       - mongo
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.nginx
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - app
 
 volumes:
   mongo_data:

@@ -9,6 +9,5 @@ FROM alpine:3.20
 RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /app/vmq_gateway .
-COPY static/ ./static/
 EXPOSE 8080
 CMD ["./vmq_gateway"]
