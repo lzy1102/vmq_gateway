@@ -72,15 +72,3 @@ func PostgresDSN() string {
 	}
 	return "postgres://postgres:123456@localhost:5432/vmq_gateway?sslmode=disable"
 }
-
-type Package struct {
-	Name         string
-	Amount       int64
-	StreamNumber int64
-}
-
-var Packages = map[string]Package{
-	"small":  {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	"medium": {Name: "中套餐", Amount: 3000, StreamNumber: 300},
-	"big":    {Name: "大套餐", Amount: 5000, StreamNumber: 500},
-}

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lzy1102/vmq_gateway/server/config"
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
 )
@@ -28,7 +27,7 @@ func nextFloatAmount(ctx context.Context, baseAmount int64) int64 {
 }
 
 func HasPendingAmount(ctx context.Context, amount int64) (bool, error) {
-	var orders []model.RechargeOrder
+	var orders []model.Order
 	err := store.DBInstance.Find(ctx, "orders", map[string]interface{}{
 		"amount": amount, "status": model.StatusPending,
 	}, &orders)
@@ -38,59 +37,58 @@ func HasPendingAmount(ctx context.Context, amount int64) (bool, error) {
 	return len(orders) > 0, nil
 }
 
-func CreateOrder(ctx context.Context, userName string, pkg config.Package, serviceID, callbackURL string) (*model.RechargeOrder, error) {
+func CreateOrder(ctx context.Context, amount int64, serviceID, callbackURL string) (*model.Order, *model.Device, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	floatAmount := nextFloatAmount(ctx, pkg.Amount)
+	floatAmount := nextFloatAmount(ctx, amount)
 	now := time.Now().Unix()
-	order := &model.RechargeOrder{
-		TradeNo:      fmt.Sprintf("V%d_%d", now, floatAmount),
-		UserName:     userName,
-		ServiceID:    serviceID,
-		CallbackURL:  callbackURL,
-		Amount:       floatAmount,
-		StreamNumber: pkg.StreamNumber,
-		Status:       model.StatusPending,
-		CreatedAt:    now,
+
+	devices, err := ListDevices(ctx)
+	if err != nil || len(devices) == 0 {
+		return nil, nil, fmt.Errorf("无可用设备")
+	}
+
+	device := devices[0]
+
+	order := &model.Order{
+		TradeNo:     fmt.Sprintf("V%d_%d", now, floatAmount),
+		ServiceID:   serviceID,
+		CallbackURL: callbackURL,
+		Amount:      floatAmount,
+		Status:      model.StatusPending,
+		DeviceID:    device.DeviceID,
+		CreatedAt:   now,
 	}
 
 	if err := store.DBInstance.Create(ctx, "orders", order); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return order, nil
+	return order, &device, nil
 }
 
-// HandleCallback 处理收款回调，返回订单、服务ID、回调地址
-func HandleCallback(ctx context.Context, device *model.Device, priceYuan float64) (*model.RechargeOrder, string, string, error) {
+func CancelOrder(ctx context.Context, orderID string) error {
+	var order model.Order
+	if err := store.DBInstance.Get(ctx, "orders", orderID, &order); err != nil {
+		return fmt.Errorf("订单不存在")
+	}
+
+	if order.Status != model.StatusPending {
+		return fmt.Errorf("订单状态不允许取消")
+	}
+
+	return store.DBInstance.UpdateByField(ctx, "orders", "trade_no", orderID,
+		map[string]interface{}{"status": model.StatusCancelled})
+}
+
+func HandleCallback(ctx context.Context, device *model.Device, priceYuan float64) (*model.Order, string, string, error) {
 	amountCents := int64(priceYuan*100 + 0.5)
 
-	var order model.RechargeOrder
+	var order model.Order
 	if err := store.DBInstance.Claim(ctx, "orders", amountCents, &order); err != nil {
 		return nil, "", "", fmt.Errorf("未找到匹配订单: amount=%d", amountCents)
 	}
 
-	// 给用户加流量
-	var users []model.User
-	if err := store.DBInstance.Find(ctx, "users", map[string]interface{}{"user_name": order.UserName}, &users); err != nil {
-		return nil, "", "", fmt.Errorf("查询用户失败: %w", err)
-	}
-	if len(users) == 0 {
-		// 创建用户
-		user := &model.User{UserName: order.UserName, StreamNumber: order.StreamNumber, CreatedAt: time.Now().Unix()}
-		if err := store.DBInstance.Create(ctx, "users", user); err != nil {
-			return nil, "", "", fmt.Errorf("创建用户失败: %w", err)
-		}
-	} else {
-		// 更新用户流量
-		newStream := users[0].StreamNumber + order.StreamNumber
-		if err := store.DBInstance.UpdateByField(ctx, "users", "user_name", order.UserName,
-			map[string]interface{}{"stream_number": newStream}); err != nil {
-			return nil, "", "", fmt.Errorf("充值失败: %w", err)
-		}
-	}
-
-	// 更新订单状态
 	now := time.Now().Unix()
 	if err := store.DBInstance.UpdateByField(ctx, "orders", "trade_no", order.TradeNo,
 		map[string]interface{}{"status": model.StatusPaid, "paid_at": now}); err != nil {
@@ -99,37 +97,32 @@ func HandleCallback(ctx context.Context, device *model.Device, priceYuan float64
 	order.Status = model.StatusPaid
 	order.PaidAt = now
 
-	serviceID, callbackURL := RouteCallback(ctx, device, &order)
+	serviceID, callbackURL := order.ServiceID, order.CallbackURL
 	return &order, serviceID, callbackURL, nil
 }
 
-// NotifyCallback 异步通知调用方支付成功
-func NotifyCallback(order *model.RechargeOrder, serviceID, callbackURL string) {
+func NotifyCallback(order *model.Order, serviceID, callbackURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	payload := fmt.Sprintf(`{"trade_no":"%s","amount":%d,"service_id":"%s","user_name":"%s","status":"paid"}`,
-		order.TradeNo, order.Amount, serviceID, order.UserName)
+	payload := fmt.Sprintf(`{"order_id":"%s","amount":%d,"service_id":"%s","status":"paid","paid_at":%d}`,
+		order.TradeNo, order.Amount, serviceID, order.PaidAt)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", callbackURL, strings.NewReader(payload))
 	if err != nil {
-		fmt.Printf("[callback] 构造请求失败: %v\n", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("[callback] 通知失败: service_id=%s url=%s err=%v\n", serviceID, callbackURL, err)
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Printf("[callback] 通知成功: service_id=%s url=%s status=%d\n", serviceID, callbackURL, resp.StatusCode)
 }
 
-// GetOrder 查询订单
-func GetOrder(ctx context.Context, tradeNo string) (*model.RechargeOrder, error) {
-	var order model.RechargeOrder
+func GetOrder(ctx context.Context, tradeNo string) (*model.Order, error) {
+	var order model.Order
 	if err := store.DBInstance.Get(ctx, "orders", tradeNo, &order); err != nil {
 		return nil, err
 	}

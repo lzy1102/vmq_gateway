@@ -140,7 +140,7 @@ func (g *GormDB) Claim(ctx context.Context, table string, amount int64, dest int
 			return err
 		}
 		return tx.Table(table).Where("amount = ? AND status = ?", amount, model.StatusPending).
-			Update("status", model.StatusProcessing).Error
+			Update("status", model.StatusPaid).Error
 	})
 }
 

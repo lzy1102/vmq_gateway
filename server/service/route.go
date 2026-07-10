@@ -21,12 +21,11 @@ func UpdateHeartbeat(ctx context.Context, deviceID string) error {
 	return store.DBInstance.UpdateHeartbeat(ctx, deviceID)
 }
 
-func RouteCallback(ctx context.Context, device *model.Device, order *model.RechargeOrder) (string, string) {
+func RouteCallback(ctx context.Context, device *model.Device, order *model.Order) (string, string) {
 	if order.ServiceID != "" && order.CallbackURL != "" {
 		return order.ServiceID, order.CallbackURL
 	}
 
-	// 查设备绑定
 	var bindings []model.Binding
 	if err := store.DBInstance.Find(ctx, "bindings", map[string]interface{}{"device_id": device.DeviceID}, &bindings); err == nil && len(bindings) > 0 {
 		binding := bindings[0]
@@ -35,7 +34,6 @@ func RouteCallback(ctx context.Context, device *model.Device, order *model.Recha
 		}
 	}
 
-	// 查池子绑定
 	var pools []model.Pool
 	if err := store.DBInstance.GetPoolsByDevice(ctx, device.DeviceID, &pools); err == nil {
 		for _, pool := range pools {

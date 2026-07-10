@@ -30,11 +30,11 @@ func main() {
 	r.GET("/appHeart", handler.Heartbeat)
 	r.GET("/appPush", handler.AppPush)
 
-	// 4. 用户 API
 	api := r.Group("/api")
 	{
-		api.POST("/recharge/vmpay", handler.CreateRechargeOrder)
-		api.GET("/recharge/vmpay-status", handler.QueryOrderStatus)
+		api.POST("/order", handler.CreateOrder)
+		api.POST("/order/cancel", handler.CancelOrder)
+		api.GET("/order/status", handler.QueryOrderStatus)
 	}
 
 	// 5. 设备管理 API（需登录）

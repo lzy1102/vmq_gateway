@@ -99,10 +99,9 @@ func (m *MongoDB) List(ctx context.Context, table string, dest interface{}) erro
 	return cursor.All(ctx, dest)
 }
 
-// Claim 原子抢单：查找金额匹配的 pending 订单并改为 processing
 func (m *MongoDB) Claim(ctx context.Context, table string, amount int64, dest interface{}) error {
 	filter := bson.M{"amount": amount, "status": model.StatusPending}
-	update := bson.M{"$set": bson.M{"status": model.StatusProcessing}}
+	update := bson.M{"$set": bson.M{"status": model.StatusPaid}}
 
 	err := m.db.Collection(table).FindOneAndUpdate(ctx, filter, update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(dest)
