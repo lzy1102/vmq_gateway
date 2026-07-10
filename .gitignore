@@ -1,0 +1,43 @@
+# Binaries
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+vmq_gateway
+
+# Test binary
+*.test
+
+# Output
+*.out
+*.prof
+
+# Dependency directories
+/vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+
+# Docker
+docker-compose.override.yml
+
+# OpenCode
+.omo/
