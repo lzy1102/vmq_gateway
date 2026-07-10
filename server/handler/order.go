@@ -7,23 +7,26 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lzy1102/vmq_gateway/server/config"
-	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/security"
 	"github.com/lzy1102/vmq_gateway/server/service"
 )
 
-// createOrderReq 创建订单请求体
 type createOrderReq struct {
 	UserName    string `json:"user_name" binding:"required"`
-	Package     string `json:"package" binding:"required"`      // small / medium / big
-	ServiceID   string `json:"service_id" binding:"required"`   // 调用方标识
-	CallbackURL string `json:"callback_url"`                    // 支付成功回调地址（可选）
+	Package     string `json:"package" binding:"required"`
+	ServiceID   string `json:"service_id" binding:"required"`
+	CallbackURL string `json:"callback_url"`
 }
 
-// CreateRechargeOrder POST /api/recharge/vmpay
 func CreateRechargeOrder(c *gin.Context) {
 	var req createOrderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+
+	if err := security.ValidateCallbackURL(req.CallbackURL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": err.Error()})
 		return
 	}
 
@@ -42,7 +45,6 @@ func CreateRechargeOrder(c *gin.Context) {
 		return
 	}
 
-	// 返回元为单位（方便前端显示）
 	amountYuan := float64(order.Amount) / 100.0
 	c.JSON(http.StatusOK, gin.H{
 		"code": 1,
@@ -56,7 +58,6 @@ func CreateRechargeOrder(c *gin.Context) {
 	})
 }
 
-// QueryOrderStatus GET /api/recharge/vmpay-status?trade_no=xxx
 func QueryOrderStatus(c *gin.Context) {
 	tradeNo := c.Query("trade_no")
 	if tradeNo == "" {
@@ -69,7 +70,7 @@ func QueryOrderStatus(c *gin.Context) {
 
 	order, err := service.GetOrder(ctx, tradeNo)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"status": model.StatusCancelled}})
+		c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"status": "pending"}})
 		return
 	}
 

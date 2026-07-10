@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 const (
 	DefaultMongoURI = "mongodb://localhost:27017"
@@ -27,6 +30,19 @@ func AdminPass() string {
 		return v
 	}
 	return "vmq_gateway"
+}
+
+func IsProduction() bool {
+	return os.Getenv("GO_ENV") == "production"
+}
+
+func ValidateConfig() {
+	user := os.Getenv("ADMIN_USER")
+	pass := os.Getenv("ADMIN_PASS")
+	if user == "" || pass == "" {
+		log.Println("⚠️  警告: 未设置 ADMIN_USER 或 ADMIN_PASS，使用默认凭据")
+		log.Println("   请在生产环境中设置: ADMIN_USER=xxx ADMIN_PASS=xxx")
+	}
 }
 
 func DBDriver() string {
@@ -57,16 +73,14 @@ func PostgresDSN() string {
 	return "postgres://postgres:123456@localhost:5432/vmq_gateway?sslmode=disable"
 }
 
-// Package 套餐定义
 type Package struct {
 	Name         string
-	Amount       int64 // 基础金额（分）
-	StreamNumber int64 // 流量数
+	Amount       int64
+	StreamNumber int64
 }
 
-// Packages 预定义套餐（MVP 硬编码）
 var Packages = map[string]Package{
-	"small":  {Name: "小套餐", Amount: 1000, StreamNumber: 100}, // 10.00元
-	"medium": {Name: "中套餐", Amount: 3000, StreamNumber: 300}, // 30.00元
-	"big":    {Name: "大套餐", Amount: 5000, StreamNumber: 500}, // 50.00元
+	"small":  {Name: "小套餐", Amount: 1000, StreamNumber: 100},
+	"medium": {Name: "中套餐", Amount: 3000, StreamNumber: 300},
+	"big":    {Name: "大套餐", Amount: 5000, StreamNumber: 500},
 }

@@ -13,7 +13,8 @@ import (
 )
 
 func main() {
-	// 1. 连接 MongoDB
+	config.ValidateConfig()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
