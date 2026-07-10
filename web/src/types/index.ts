@@ -1,0 +1,35 @@
+export interface ApiResponse<T = any> {
+  code: number
+  msg: string
+  data?: T
+}
+
+export interface Order {
+  trade_no: string
+  user_name: string
+  amount: number
+  stream_number: number
+  status: 'pending' | 'processing' | 'paid' | 'cancelled' | 'expired'
+  created_at: number
+  paid_at?: number
+}
+
+export interface Device {
+  device_id: string
+  vmq_key: string
+  status: 'online' | 'offline'
+  last_heartbeat?: number
+}
+
+export interface Pool {
+  pool_id: string
+  name: string
+  device_ids: string[]
+}
+
+export interface Binding {
+  service_id: string
+  callback_url: string
+  device_id?: string
+  pool_id?: string
+}

@@ -1,0 +1,81 @@
+import type { ApiResponse, Device, Pool, Binding } from '@/types'
+
+async function request<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
+  const resp = await fetch(url, options)
+  return resp.json()
+}
+
+// ========== 支付相关 ==========
+
+export function createOrder(userName: string, pkgName: string) {
+  return request<{ trade_no: string; amount: number; qr_url: string }>('/api/recharge/vmpay', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_name: userName, pkg_name: pkgName })
+  })
+}
+
+export function queryOrderStatus(tradeNo: string) {
+  return request<{ status: string; amount?: number }>('/api/recharge/vmpay-status?trade_no=' + encodeURIComponent(tradeNo))
+}
+
+// ========== 管理后台 ==========
+
+export function login(username: string, password: string) {
+  return request('/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+}
+
+export function logout() {
+  return request('/admin/logout', { method: 'POST' })
+}
+
+export function addDevice(deviceId: string) {
+  return request<{ key: string }>('/admin/device', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_id: deviceId })
+  })
+}
+
+export function listDevices() {
+  return request<Device[]>('/admin/devices')
+}
+
+export function addPool(poolId: string, name: string) {
+  return request('/admin/pool', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pool_id: poolId, name })
+  })
+}
+
+export function addDeviceToPool(poolId: string, deviceId: string) {
+  return request('/admin/pool/device', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pool_id: poolId, device_id: deviceId })
+  })
+}
+
+export function listPools() {
+  return request<Pool[]>('/admin/pools')
+}
+
+export function addBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string) {
+  const body: Record<string, string> = { service_id: serviceId, callback_url: callbackUrl }
+  if (deviceId) body.device_id = deviceId
+  if (poolId) body.pool_id = poolId
+  return request('/admin/binding', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+}
+
+export function listBindings() {
+  return request<Binding[]>('/admin/bindings')
+}
