@@ -12,11 +12,11 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/config"
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/service"
-	"github.com/lzy1102/vmq_gateway/store"
-	"github.com/lzy1102/vmq_gateway/store/gorm"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/service"
+	"github.com/lzy1102/vmq_gateway/server/store"
+	"github.com/lzy1102/vmq_gateway/server/store/gorm"
 	gormdriver "gorm.io/gorm"
 )
 

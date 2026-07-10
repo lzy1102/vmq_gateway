@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lzy1102/vmq_gateway/model"
+	"github.com/lzy1102/vmq_gateway/server/model"
 	"gorm.io/gorm"
 )
 

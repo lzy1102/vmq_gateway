@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/config"
-	"github.com/lzy1102/vmq_gateway/middleware"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	"github.com/lzy1102/vmq_gateway/server/middleware"
 )
 
 type loginReq struct {

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/config"
-	"github.com/lzy1102/vmq_gateway/handler"
-	"github.com/lzy1102/vmq_gateway/middleware"
-	"github.com/lzy1102/vmq_gateway/store"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	"github.com/lzy1102/vmq_gateway/server/handler"
+	"github.com/lzy1102/vmq_gateway/server/middleware"
+	"github.com/lzy1102/vmq_gateway/server/store"
 )
 
 func main() {

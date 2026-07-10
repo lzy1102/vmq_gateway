@@ -1,10 +1,10 @@
 # Binaries
 /bin/
+server/vmq_gateway
 *.exe
 *.dll
 *.so
 *.dylib
-vmq_gateway
 
 # Test binary
 *.test

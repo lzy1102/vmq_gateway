@@ -1,8 +1,8 @@
 FROM golang:1.26-alpine AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY server/go.mod server/go.sum ./
 RUN go mod download
-COPY . .
+COPY server/ .
 RUN CGO_ENABLED=0 go build -o vmq_gateway .
 
 FROM alpine:3.20

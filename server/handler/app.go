@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/service"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/service"
 )
 
 // Heartbeat 处理 APP 心跳 GET /appHeart?t={timestamp_ms}&sign={md5}

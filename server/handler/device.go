@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/service"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/service"
 )
 
 type addDeviceReq struct {

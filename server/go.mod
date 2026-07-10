@@ -1,4 +1,4 @@
-module github.com/lzy1102/vmq_gateway
+module github.com/lzy1102/vmq_gateway/server
 
 go 1.26.2
 

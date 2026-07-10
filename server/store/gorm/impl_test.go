@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lzy1102/vmq_gateway/model"
+	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/glebarez/sqlite"
-	"github.com/lzy1102/vmq_gateway/config"
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/store"
-	gormstore "github.com/lzy1102/vmq_gateway/store/gorm"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/store"
+	gormstore "github.com/lzy1102/vmq_gateway/server/store/gorm"
 	gormdriver "gorm.io/gorm"
 )
 

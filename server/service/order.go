@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lzy1102/vmq_gateway/config"
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/store"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/store"
 )
 
 var mu sync.Mutex

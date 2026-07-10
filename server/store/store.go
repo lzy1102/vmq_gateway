@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lzy1102/vmq_gateway/config"
-	gormstore "github.com/lzy1102/vmq_gateway/store/gorm"
-	mongostore "github.com/lzy1102/vmq_gateway/store/mongo"
+	"github.com/lzy1102/vmq_gateway/server/config"
+	gormstore "github.com/lzy1102/vmq_gateway/server/store/gorm"
+	mongostore "github.com/lzy1102/vmq_gateway/server/store/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"github.com/glebarez/sqlite"

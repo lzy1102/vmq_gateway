@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lzy1102/vmq_gateway/model"
-	"github.com/lzy1102/vmq_gateway/store"
+	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/store"
 )
 
 func IdentifyDevice(ctx context.Context, key string) (*model.Device, error) {

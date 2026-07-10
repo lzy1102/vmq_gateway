@@ -8,7 +8,9 @@ services:
       - mongo_data:/data/db
 
   app:
-    build: .
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
     restart: always
     ports:
       - "8080:8080"

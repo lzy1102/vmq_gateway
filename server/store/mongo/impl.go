@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lzy1102/vmq_gateway/model"
+	"github.com/lzy1102/vmq_gateway/server/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
