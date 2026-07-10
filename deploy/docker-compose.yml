@@ -1,12 +1,4 @@
 services:
-  mongo:
-    image: mongo:7
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
   app:
     build:
       context: ..
@@ -15,11 +7,12 @@ services:
     expose:
       - "8080"
     environment:
-      - MONGO_URI=mongodb://mongo:27017
+      - DB_DRIVER=sqlite
+      - DB_PATH=/data/vmq_gateway.db
       - ADMIN_USER=admin
       - ADMIN_PASS=vmq_gateway
-    depends_on:
-      - mongo
+    volumes:
+      - app_data:/data
 
   nginx:
     build:
@@ -32,4 +25,4 @@ services:
       - app
 
 volumes:
-  mongo_data:
+  app_data:

@@ -19,14 +19,12 @@ func main() {
 	defer cancel()
 
 	if err := store.Init(ctx); err != nil {
-		log.Fatalf("MongoDB 连接失败: %v", err)
+		log.Fatalf("数据库初始化失败: %v", err)
 	}
-	log.Println("MongoDB 连接成功")
+	log.Println("数据库连接成功")
 
-	// 2. 创建路由
 	r := gin.Default()
 
-	// 3. APP 回调接口（GET，签名在 handler 内验证）
 	r.GET("/appHeart", handler.Heartbeat)
 	r.GET("/appPush", handler.AppPush)
 
@@ -37,7 +35,6 @@ func main() {
 		api.GET("/order/status", handler.QueryOrderStatus)
 	}
 
-	// 5. 设备管理 API（需登录）
 	admin := r.Group("/admin")
 	admin.POST("/login", handler.Login)
 	admin.POST("/logout", handler.Logout)
@@ -54,7 +51,6 @@ func main() {
 		protected.GET("/bindings", handler.ListBindings)
 	}
 
-	// 6. 启动
 	log.Printf("V免签支付网关启动 → %s", config.ListenAddr)
 	if err := r.Run(config.ListenAddr); err != nil {
 		log.Fatalf("启动失败: %v", err)

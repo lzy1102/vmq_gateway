@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/glebarez/sqlite"
-	"github.com/lzy1102/vmq_gateway/server/config"
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
 	gormstore "github.com/lzy1102/vmq_gateway/server/store/gorm"
@@ -21,7 +20,6 @@ func setupTestDB(t *testing.T) {
 	}
 	if err := db.AutoMigrate(
 		&gormstore.GormOrder{},
-		&gormstore.GormUser{},
 		&gormstore.GormDevice{},
 		&gormstore.GormPool{},
 		&gormstore.GormPoolDevice{},
@@ -36,11 +34,9 @@ func TestCreateOrder(t *testing.T) {
 	setupTestDB(t)
 	ctx := context.Background()
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	}
+	addTestDevice(t, ctx)
 
-	order, err := CreateOrder(ctx, "test_user", config.Packages["small"], "service1", "http://callback.test")
+	order, _, err := CreateOrder(ctx, 1000, "service1", "http://callback.test")
 	if err != nil {
 		t.Fatalf("CreateOrder failed: %v", err)
 	}
@@ -48,14 +44,26 @@ func TestCreateOrder(t *testing.T) {
 	if order.TradeNo == "" {
 		t.Error("TradeNo should not be empty")
 	}
-	if order.UserName != "test_user" {
-		t.Errorf("UserName = %s, want test_user", order.UserName)
-	}
 	if order.Amount < 1001 || order.Amount > 1019 {
 		t.Errorf("Amount = %d, want 1001-1019", order.Amount)
 	}
 	if order.Status != model.StatusPending {
 		t.Errorf("Status = %s, want pending", order.Status)
+	}
+	if order.ServiceID != "service1" {
+		t.Errorf("ServiceID = %s, want service1", order.ServiceID)
+	}
+}
+
+func addTestDevice(t *testing.T, ctx context.Context) {
+	t.Helper()
+	device := &model.Device{
+		DeviceID: "device1",
+		VmqKey:   "testkey",
+		Status:   model.DeviceOffline,
+	}
+	if err := store.DBInstance.Create(ctx, "devices", device); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -63,9 +71,7 @@ func TestHasPendingAmount(t *testing.T) {
 	setupTestDB(t)
 	ctx := context.Background()
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	}
+	addTestDevice(t, ctx)
 
 	exists, err := HasPendingAmount(ctx, 1001)
 	if err != nil {
@@ -75,7 +81,7 @@ func TestHasPendingAmount(t *testing.T) {
 		t.Error("Should not have pending amount yet")
 	}
 
-	_, err = CreateOrder(ctx, "test_user", config.Packages["small"], "service1", "http://callback.test")
+	_, _, err = CreateOrder(ctx, 1000, "service1", "http://callback.test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,11 +99,9 @@ func TestGetOrder(t *testing.T) {
 	setupTestDB(t)
 	ctx := context.Background()
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	}
+	addTestDevice(t, ctx)
 
-	created, err := CreateOrder(ctx, "test_user", config.Packages["small"], "service1", "http://callback.test")
+	created, _, err := CreateOrder(ctx, 1000, "service1", "http://callback.test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,18 +120,16 @@ func TestHandleCallback(t *testing.T) {
 	setupTestDB(t)
 	ctx := context.Background()
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	}
+	addTestDevice(t, ctx)
 
-	created, err := CreateOrder(ctx, "test_user", config.Packages["small"], "service1", "http://callback.test")
+	created, _, err := CreateOrder(ctx, 1000, "service1", "http://callback.test")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "testkey",
+		VmqKey:   "testkey",
 		Status:   model.DeviceOnline,
 	}
 
@@ -145,14 +147,6 @@ func TestHandleCallback(t *testing.T) {
 	}
 	if callbackURL != "http://callback.test" {
 		t.Errorf("CallbackURL = %s, want http://callback.test", callbackURL)
-	}
-
-	var users []model.User
-	if err := store.DBInstance.Find(ctx, "users", map[string]interface{}{"user_name": "test_user"}, &users); err != nil {
-		t.Fatal(err)
-	}
-	if len(users) == 0 {
-		t.Error("User should be created")
 	}
 }
 

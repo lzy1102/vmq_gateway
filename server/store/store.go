@@ -49,7 +49,6 @@ func initGORM(dialector gormdriver.Dialector) error {
 	}
 	if err := db.AutoMigrate(
 		&gormstore.GormOrder{},
-		&gormstore.GormUser{},
 		&gormstore.GormDevice{},
 		&gormstore.GormPool{},
 		&gormstore.GormPoolDevice{},

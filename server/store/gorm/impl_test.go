@@ -17,7 +17,6 @@ func setupTestDB(t *testing.T) *GormDB {
 	}
 	if err := db.AutoMigrate(
 		&GormOrder{},
-		&GormUser{},
 		&GormDevice{},
 		&GormPool{},
 		&GormPoolDevice{},
@@ -33,14 +32,13 @@ func TestCreate(t *testing.T) {
 	ctx := context.Background()
 
 	order := &GormOrder{
-		TradeNo:      "V123_1001",
-		UserName:     "test_user",
-		ServiceID:    "service1",
-		CallbackURL:  "http://callback.test",
-		Amount:       1001,
-		StreamNumber: 100,
-		Status:       model.StatusPending,
-		CreatedAt:    1234567890,
+		TradeNo:     "V123_1001",
+		ServiceID:   "service1",
+		CallbackURL: "http://callback.test",
+		Amount:      1001,
+		Status:      model.StatusPending,
+		DeviceID:    "device1",
+		CreatedAt:   1234567890,
 	}
 
 	if err := db.Create(ctx, "orders", order); err != nil {
@@ -55,8 +53,8 @@ func TestCreate(t *testing.T) {
 	if found.TradeNo != "V123_1001" {
 		t.Errorf("TradeNo = %s, want V123_1001", found.TradeNo)
 	}
-	if found.UserName != "test_user" {
-		t.Errorf("UserName = %s, want test_user", found.UserName)
+	if found.ServiceID != "service1" {
+		t.Errorf("ServiceID = %s, want service1", found.ServiceID)
 	}
 }
 
@@ -65,8 +63,8 @@ func TestFind(t *testing.T) {
 	ctx := context.Background()
 
 	orders := []GormOrder{
-		{TradeNo: "V1_1001", UserName: "user1", Amount: 1001, Status: model.StatusPending, CreatedAt: 1234567890},
-		{TradeNo: "V2_1002", UserName: "user2", Amount: 1002, Status: model.StatusPaid, CreatedAt: 1234567891},
+		{TradeNo: "V1_1001", Amount: 1001, Status: model.StatusPending, CreatedAt: 1234567890},
+		{TradeNo: "V2_1002", Amount: 1002, Status: model.StatusPaid, CreatedAt: 1234567891},
 	}
 	for _, o := range orders {
 		if err := db.Create(ctx, "orders", &o); err != nil {
@@ -93,7 +91,6 @@ func TestUpdate(t *testing.T) {
 
 	order := &GormOrder{
 		TradeNo:   "V1_1001",
-		UserName:  "test_user",
 		Amount:    1001,
 		Status:    model.StatusPending,
 		CreatedAt: 1234567890,
@@ -128,7 +125,6 @@ func TestDelete(t *testing.T) {
 
 	order := &GormOrder{
 		TradeNo:   "V1_1001",
-		UserName:  "test_user",
 		Amount:    1001,
 		Status:    model.StatusPending,
 		CreatedAt: 1234567890,
@@ -153,8 +149,8 @@ func TestList(t *testing.T) {
 	ctx := context.Background()
 
 	orders := []GormOrder{
-		{TradeNo: "V1_1001", UserName: "user1", Amount: 1001, Status: model.StatusPending, CreatedAt: 1234567890},
-		{TradeNo: "V2_1002", UserName: "user2", Amount: 1002, Status: model.StatusPaid, CreatedAt: 1234567891},
+		{TradeNo: "V1_1001", Amount: 1001, Status: model.StatusPending, CreatedAt: 1234567890},
+		{TradeNo: "V2_1002", Amount: 1002, Status: model.StatusPaid, CreatedAt: 1234567891},
 	}
 	for _, o := range orders {
 		if err := db.Create(ctx, "orders", &o); err != nil {
@@ -178,7 +174,6 @@ func TestClaim(t *testing.T) {
 
 	order := &GormOrder{
 		TradeNo:   "V1_1001",
-		UserName:  "test_user",
 		Amount:    1001,
 		Status:    model.StatusPending,
 		CreatedAt: 1234567890,
@@ -200,57 +195,8 @@ func TestClaim(t *testing.T) {
 	if err := db.Get(ctx, "orders", "V1_1001", &found); err != nil {
 		t.Fatal(err)
 	}
-	if found.Status != model.StatusProcessing {
-		t.Errorf("Status after claim = %s, want processing", found.Status)
-	}
-}
-
-func TestUpsert_Insert(t *testing.T) {
-	db := setupTestDB(t)
-	ctx := context.Background()
-
-	user := &GormUser{
-		UserName:     "test_user",
-		StreamNumber: 100,
-		CreatedAt:    1234567890,
-	}
-	if err := db.Create(ctx, "users", user); err != nil {
-		t.Fatal(err)
-	}
-
-	var found GormUser
-	if err := db.GetByField(ctx, "users", "user_name", "test_user", &found); err != nil {
-		t.Fatal(err)
-	}
-	if found.StreamNumber != 100 {
-		t.Errorf("StreamNumber = %d, want 100", found.StreamNumber)
-	}
-}
-
-func TestUpsert_Update(t *testing.T) {
-	db := setupTestDB(t)
-	ctx := context.Background()
-
-	user := &GormUser{
-		UserName:     "test_user",
-		StreamNumber: 100,
-		CreatedAt:    1234567890,
-	}
-	if err := db.Create(ctx, "users", user); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.UpdateByField(ctx, "users", "user_name", "test_user",
-		map[string]interface{}{"stream_number": 200}); err != nil {
-		t.Fatal(err)
-	}
-
-	var found GormUser
-	if err := db.GetByField(ctx, "users", "user_name", "test_user", &found); err != nil {
-		t.Fatal(err)
-	}
-	if found.StreamNumber != 200 {
-		t.Errorf("StreamNumber = %d, want 200", found.StreamNumber)
+	if found.Status != model.StatusPaid {
+		t.Errorf("Status after claim = %s, want paid", found.Status)
 	}
 }
 

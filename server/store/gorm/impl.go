@@ -10,27 +10,17 @@ import (
 
 type GormOrder struct {
 	gorm.Model
-	TradeNo      string `gorm:"uniqueIndex;size:64"`
-	UserName     string `gorm:"size:128"`
-	ServiceID    string `gorm:"size:128"`
-	CallbackURL  string `gorm:"size:512"`
-	Amount       int64
-	StreamNumber int64
-	Status       string `gorm:"size:16;default:pending;index:idx_status_amount"`
-	CreatedAt    int64
-	PaidAt       int64
+	TradeNo     string `gorm:"uniqueIndex;size:64"`
+	ServiceID   string `gorm:"size:128"`
+	CallbackURL string `gorm:"size:512"`
+	Amount      int64
+	Status      string `gorm:"size:16;default:pending;index:idx_status_amount"`
+	DeviceID    string `gorm:"size:128"`
+	CreatedAt   int64
+	PaidAt      int64
 }
 
 func (GormOrder) TableName() string { return "orders" }
-
-type GormUser struct {
-	gorm.Model
-	UserName     string `gorm:"uniqueIndex;size:128"`
-	StreamNumber int64
-	CreatedAt    int64
-}
-
-func (GormUser) TableName() string { return "users" }
 
 type GormDevice struct {
 	gorm.Model

@@ -12,7 +12,6 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/gin-gonic/gin"
-	"github.com/lzy1102/vmq_gateway/server/config"
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/service"
 	"github.com/lzy1102/vmq_gateway/server/store"
@@ -30,7 +29,6 @@ func setupTestEnv(t *testing.T) {
 	}
 	if err := db.AutoMigrate(
 		&gorm.GormOrder{},
-		&gorm.GormUser{},
 		&gorm.GormDevice{},
 		&gorm.GormPool{},
 		&gorm.GormPoolDevice{},
@@ -39,27 +37,35 @@ func setupTestEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	store.DBInstance = gorm.New(db)
+}
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
+func addTestDevice(t *testing.T) {
+	t.Helper()
+	device := &model.Device{
+		DeviceID: "device1",
+		VmqKey:   "testkey",
+		Status:   model.DeviceOffline,
+	}
+	if err := store.DBInstance.Create(context.Background(), "devices", device); err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestCreateRechargeOrder(t *testing.T) {
+func TestCreateOrder(t *testing.T) {
 	setupTestEnv(t)
+	addTestDevice(t)
 
 	router := gin.New()
-	router.POST("/api/recharge/vmpay", CreateRechargeOrder)
+	router.POST("/api/order", CreateOrder)
 
 	body := createOrderReq{
-		UserName:    "test_user",
-		Package:     "small",
+		Amount:      1000,
 		ServiceID:   "service1",
 		CallbackURL: "http://callback.test",
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequestWithContext(context.Background(), "POST", "/api/recharge/vmpay", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequestWithContext(context.Background(), "POST", "/api/order", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -79,21 +85,21 @@ func TestCreateRechargeOrder(t *testing.T) {
 	}
 }
 
-func TestCreateRechargeOrder_InvalidPackage(t *testing.T) {
+func TestCreateOrder_InvalidAmount(t *testing.T) {
 	setupTestEnv(t)
+	addTestDevice(t)
 
 	router := gin.New()
-	router.POST("/api/recharge/vmpay", CreateRechargeOrder)
+	router.POST("/api/order", CreateOrder)
 
 	body := createOrderReq{
-		UserName:    "test_user",
-		Package:     "invalid",
+		Amount:      -100,
 		ServiceID:   "service1",
 		CallbackURL: "http://callback.test",
 	}
 	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequestWithContext(context.Background(), "POST", "/api/recharge/vmpay", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequestWithContext(context.Background(), "POST", "/api/order", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -106,20 +112,17 @@ func TestCreateRechargeOrder_InvalidPackage(t *testing.T) {
 
 func TestQueryOrderStatus(t *testing.T) {
 	setupTestEnv(t)
+	addTestDevice(t)
 
-	config.Packages = map[string]config.Package{
-		"small": {Name: "小套餐", Amount: 1000, StreamNumber: 100},
-	}
-
-	order, err := service.CreateOrder(context.Background(), "test_user", config.Packages["small"], "service1", "http://callback.test")
+	order, _, err := service.CreateOrder(context.Background(), 1000, "service1", "http://callback.test")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	router := gin.New()
-	router.GET("/api/recharge/vmpay-status", QueryOrderStatus)
+	router.GET("/api/order/status", QueryOrderStatus)
 
-	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/api/recharge/vmpay-status?trade_no="+order.TradeNo, nil)
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/api/order/status?order_id="+order.TradeNo, nil)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -142,9 +145,9 @@ func TestQueryOrderStatus_NotFound(t *testing.T) {
 	setupTestEnv(t)
 
 	router := gin.New()
-	router.GET("/api/recharge/vmpay-status", QueryOrderStatus)
+	router.GET("/api/order/status", QueryOrderStatus)
 
-	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/api/recharge/vmpay-status?trade_no=nonexistent", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "/api/order/status?order_id=nonexistent", nil)
 	w := httptest.NewRecorder()
 
 	router.ServeHTTP(w, req)
@@ -159,7 +162,7 @@ func TestHeartbeat(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "testkey",
+		VmqKey:   "testkey",
 		Status:   model.DeviceOffline,
 	}
 	if err := store.DBInstance.Create(context.Background(), "devices", device); err != nil {
@@ -228,7 +231,7 @@ func TestListDevices(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOnline,
 	}
 	if err := store.DBInstance.Create(context.Background(), "devices", device); err != nil {

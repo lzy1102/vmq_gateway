@@ -19,7 +19,6 @@ func setupTestDBForRoute(t *testing.T) {
 	}
 	if err := db.AutoMigrate(
 		&gormstore.GormOrder{},
-		&gormstore.GormUser{},
 		&gormstore.GormDevice{},
 		&gormstore.GormPool{},
 		&gormstore.GormPoolDevice{},
@@ -36,7 +35,7 @@ func TestIdentifyDevice(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "testkey123",
+		VmqKey:   "testkey123",
 		Status:   model.DeviceOffline,
 	}
 	if err := store.DBInstance.Create(ctx, "devices", device); err != nil {
@@ -93,7 +92,7 @@ func TestAddDevice(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOffline,
 	}
 	if err := AddDevice(ctx, device); err != nil {
@@ -146,7 +145,7 @@ func TestAddDeviceToPool(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOnline,
 	}
 	if err := AddDevice(ctx, device); err != nil {
@@ -195,7 +194,7 @@ func TestRouteCallback_DirectBinding(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOnline,
 	}
 	if err := AddDevice(ctx, device); err != nil {
@@ -212,7 +211,7 @@ func TestRouteCallback_DirectBinding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	order := &model.RechargeOrder{
+	order := &model.Order{
 		ServiceID:   "",
 		CallbackURL: "",
 	}
@@ -232,7 +231,7 @@ func TestRouteCallback_PoolBinding(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOnline,
 	}
 	if err := AddDevice(ctx, device); err != nil {
@@ -262,7 +261,7 @@ func TestRouteCallback_PoolBinding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	order := &model.RechargeOrder{
+	order := &model.Order{
 		ServiceID:   "",
 		CallbackURL: "",
 	}
@@ -282,14 +281,14 @@ func TestRouteCallback_OrderDirect(t *testing.T) {
 
 	device := &model.Device{
 		DeviceID: "device1",
-		VmqKey:      "key1",
+		VmqKey:   "key1",
 		Status:   model.DeviceOnline,
 	}
 	if err := AddDevice(ctx, device); err != nil {
 		t.Fatal(err)
 	}
 
-	order := &model.RechargeOrder{
+	order := &model.Order{
 		ServiceID:   "service3",
 		CallbackURL: "http://callback3.test",
 	}
