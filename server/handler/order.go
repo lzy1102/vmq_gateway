@@ -59,17 +59,24 @@ func CreateOrder(c *gin.Context) {
 
 	amountYuan := float64(order.Amount) / 100.0
 	requestedYuan := float64(req.Amount) / 100.0
+	now := time.Now().Unix()
+	remaining := order.ExpireAt - now
+	if remaining < 0 {
+		remaining = 0
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code": 1,
 		"data": gin.H{
-			"order_id":       order.TradeNo,
-			"request_amount": req.Amount,
-			"request_str":    fmt.Sprintf("%.2f", requestedYuan),
-			"pay_amount":     order.Amount,
-			"pay_str":        fmt.Sprintf("%.2f", amountYuan),
-			"device_id":      device.DeviceID,
-			"pool_id":        "",
-			"qr_url":         qrURL,
+			"order_id":         order.TradeNo,
+			"request_amount":   req.Amount,
+			"request_str":      fmt.Sprintf("%.2f", requestedYuan),
+			"pay_amount":       order.Amount,
+			"pay_str":          fmt.Sprintf("%.2f", amountYuan),
+			"device_id":        device.DeviceID,
+			"pool_id":          "",
+			"qr_url":           qrURL,
+			"expire_at":        order.ExpireAt,
+			"remaining_seconds": remaining,
 		},
 	})
 }
@@ -112,14 +119,21 @@ func QueryOrderStatus(c *gin.Context) {
 		return
 	}
 
+	now := time.Now().Unix()
+	remaining := order.ExpireAt - now
+	if remaining < 0 {
+		remaining = 0
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"code": 1,
 		"data": gin.H{
-			"order_id":   order.TradeNo,
-			"amount":     order.Amount,
-			"status":     order.Status,
-			"paid_at":    order.PaidAt,
-			"created_at": order.CreatedAt,
+			"order_id":          order.TradeNo,
+			"amount":            order.Amount,
+			"status":            order.Status,
+			"paid_at":           order.PaidAt,
+			"created_at":        order.CreatedAt,
+			"expire_at":         order.ExpireAt,
+			"remaining_seconds": remaining,
 		},
 	})
 }

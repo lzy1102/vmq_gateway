@@ -10,6 +10,7 @@ import (
 	"github.com/lzy1102/vmq_gateway/server/handler"
 	"github.com/lzy1102/vmq_gateway/server/middleware"
 	"github.com/lzy1102/vmq_gateway/server/model"
+	"github.com/lzy1102/vmq_gateway/server/service"
 	"github.com/lzy1102/vmq_gateway/server/store"
 )
 
@@ -26,7 +27,10 @@ func main() {
 
 	store.DBInstance.AutoMigrate(ctx,
 		&model.Device{},
+		&model.Order{},
 	)
+
+	go expireOrdersLoop()
 
 	r := gin.Default()
 
@@ -66,5 +70,19 @@ func main() {
 	log.Printf("V免签支付网关启动 → %s", config.ListenAddr)
 	if err := r.Run(config.ListenAddr); err != nil {
 		log.Fatalf("启动失败: %v", err)
+	}
+}
+
+func expireOrdersLoop() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		ctx := context.Background()
+		n, err := service.ExpireStaleOrders(ctx)
+		if err != nil {
+			log.Printf("[expire] 错误: %v", err)
+		} else if n > 0 {
+			log.Printf("[expire] 已过期 %d 个订单", n)
+		}
 	}
 }

@@ -20,6 +20,7 @@ type GormOrder struct {
 	DeviceID    string `gorm:"size:128"`
 	CreatedAt   int64
 	PaidAt      int64
+	ExpireAt    int64 `gorm:"column:expire_at;index"`
 }
 
 func (GormOrder) TableName() string { return "orders" }
@@ -177,11 +178,12 @@ func (g *GormDB) ListWithPage(ctx context.Context, table string, dest interface{
 }
 
 func (g *GormDB) Claim(ctx context.Context, table string, amount int64, dest interface{}) error {
+	now := time.Now().Unix()
 	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Table(table).Where("amount = ? AND status = ?", amount, model.StatusPending).First(dest).Error; err != nil {
+		if err := tx.Table(table).Where("amount = ? AND status = ? AND expire_at > ?", amount, model.StatusPending, now).First(dest).Error; err != nil {
 			return err
 		}
-		return tx.Table(table).Where("amount = ? AND status = ?", amount, model.StatusPending).
+		return tx.Table(table).Where("amount = ? AND status = ? AND expire_at > ?", amount, model.StatusPending, now).
 			Update("status", model.StatusPaid).Error
 	})
 }
@@ -270,4 +272,12 @@ func (g *GormDB) GetPoolsByDevice(ctx context.Context, deviceID string, dest int
 	return g.db.WithContext(ctx).Table("pools").
 		Joins("JOIN pool_devices ON pools.pool_id = pool_devices.pool_id").
 		Where("pool_devices.device_id = ?", deviceID).Find(dest).Error
+}
+
+func (g *GormDB) ExpireStaleOrders(ctx context.Context) (int64, error) {
+	now := time.Now().Unix()
+	result := g.db.WithContext(ctx).Table("orders").
+		Where("status = ? AND expire_at > 0 AND expire_at <= ?", model.StatusPending, now).
+		Update("status", model.StatusExpired)
+	return result.RowsAffected, result.Error
 }

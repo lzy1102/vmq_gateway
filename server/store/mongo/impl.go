@@ -265,3 +265,15 @@ func (m *MongoDB) buildIDFilter(id string) bson.M {
 	}
 	return bson.M{"_id": id}
 }
+
+func (m *MongoDB) ExpireStaleOrders(ctx context.Context) (int64, error) {
+	now := time.Now().Unix()
+	result, err := m.db.Collection("orders").UpdateMany(ctx,
+		bson.M{"status": model.StatusPending, "expire_at": bson.M{"$gt": 0, "$lte": now}},
+		bson.M{"$set": bson.M{"status": model.StatusExpired}},
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.ModifiedCount, nil
+}

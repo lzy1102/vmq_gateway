@@ -9,6 +9,7 @@ type Order struct {
 	DeviceID    string `bson:"device_id" json:"device_id" gorm:"column:device_id"`
 	CreatedAt   int64  `bson:"created_at" json:"created_at" gorm:"column:created_at"`
 	PaidAt      int64  `bson:"paid_at" json:"paid_at,omitempty" gorm:"column:paid_at"`
+	ExpireAt    int64  `bson:"expire_at" json:"expire_at" gorm:"column:expire_at"`
 }
 
 func (Order) TableName() string {
@@ -20,4 +21,6 @@ const (
 	StatusPaid      = "paid"
 	StatusCancelled = "cancelled"
 	StatusExpired   = "expired"
+
+	DefaultExpireMinutes = 15
 )

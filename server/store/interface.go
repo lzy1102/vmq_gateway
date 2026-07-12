@@ -33,6 +33,7 @@ type DB interface {
 	RemovePoolDevicesByPool(ctx context.Context, poolID string) error
 	GetPoolDeviceIDs(ctx context.Context, poolID string) ([]string, error)
 	GetPoolsByDevice(ctx context.Context, deviceID string, dest interface{}) error
+	ExpireStaleOrders(ctx context.Context) (int64, error)
 }
 
 type PageResult = types.PageResult

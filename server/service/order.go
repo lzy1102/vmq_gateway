@@ -59,6 +59,7 @@ func CreateOrder(ctx context.Context, amount int64, serviceID, callbackURL strin
 		Status:      model.StatusPending,
 		DeviceID:    device.DeviceID,
 		CreatedAt:   now,
+		ExpireAt:    now + int64(model.DefaultExpireMinutes*60),
 	}
 
 	if err := store.DBInstance.Create(ctx, "orders", order); err != nil {
@@ -151,4 +152,8 @@ func ValidateTimestamp(tsSec int64) bool {
 		diff = -diff
 	}
 	return diff <= 300
+}
+
+func ExpireStaleOrders(ctx context.Context) (int64, error) {
+	return store.DBInstance.ExpireStaleOrders(ctx)
 }
