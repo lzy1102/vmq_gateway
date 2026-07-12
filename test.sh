@@ -43,11 +43,13 @@ fi
 green "设备ID: $DEVICE_ID"
 green "Key: $KEY"
 
+SERVICE_ID="test_$(date +%s)"
+
 info "=== 1.5 创建服务绑定 ==="
 RESP=$(curl -s -X POST "$BASE_URL/admin/binding" \
   -H 'Content-Type: application/json' \
   -b "$COOKIE_FILE" \
-  -d "{\"service_id\":\"test_service\",\"callback_url\":\"https://httpbin.org/post\"}")
+  -d "{\"service_id\":\"$SERVICE_ID\",\"callback_url\":\"https://httpbin.org/post\"}")
 echo "$RESP"
 API_KEY=$(echo "$RESP" | grep -o '"api_key":"[^"]*"' | cut -d'"' -f4)
 if [ -z "$API_KEY" ]; then
@@ -69,10 +71,10 @@ fi
 
 sleep 1
 
-info "=== 3. 创建订单 ==="
+info "=== 3. 创建订单（回调模式）==="
 RESP=$(curl -s -X POST "$BASE_URL/api/order" \
   -H 'Content-Type: application/json' \
-  -d "{\"amount\":100, \"service_id\":\"test_service\", \"callback_url\":\"https://httpbin.org/post\", \"api_key\":\"$API_KEY\"}")
+  -d "{\"amount\":100, \"service_id\":\"$SERVICE_ID\", \"callback_url\":\"https://httpbin.org/post\", \"api_key\":\"$API_KEY\"}")
 echo "$RESP"
 ORDER_ID=$(echo "$RESP" | grep -o '"order_id":"[^"]*"' | cut -d'"' -f4)
 AMOUNT_YUAN=$(echo "$RESP" | grep -o '"amount_str":[0-9.]*' | cut -d':' -f2)
@@ -83,6 +85,17 @@ if [ -z "$ORDER_ID" ]; then
 fi
 green "订单号: $ORDER_ID"
 green "支付金额: ${AMOUNT_YUAN} 元"
+
+info "=== 3.5 创建订单（轮询模式，无 callback_url）==="
+RESP2=$(curl -s -X POST "$BASE_URL/api/order" \
+  -H 'Content-Type: application/json' \
+  -d "{\"amount\":200, \"service_id\":\"$SERVICE_ID\", \"api_key\":\"$API_KEY\"}")
+echo "$RESP2"
+ORDER_ID2=$(echo "$RESP2" | grep -o '"order_id":"[^"]*"' | cut -d'"' -f4)
+AMOUNT_YUAN2=$(echo "$RESP2" | grep -o '"amount_str":[0-9.]*' | cut -d':' -f2)
+if [ -n "$ORDER_ID2" ]; then
+  green "轮询订单号: $ORDER_ID2, 金额: ${AMOUNT_YUAN2} 元"
+fi
 
 info "=== 4. 查询订单状态（付款前）==="
 RESP=$(curl -s "$BASE_URL/api/order/status?order_id=${ORDER_ID}")

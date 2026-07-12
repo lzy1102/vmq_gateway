@@ -13,7 +13,7 @@ import (
 type createOrderReq struct {
 	Amount      int64  `json:"amount" binding:"required"`
 	ServiceID   string `json:"service_id" binding:"required"`
-	CallbackURL string `json:"callback_url" binding:"required"`
+	CallbackURL string `json:"callback_url"`
 	APIKey      string `json:"api_key" binding:"required"`
 }
 
@@ -29,9 +29,11 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	if err := security.ValidateCallbackURL(req.CallbackURL); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": err.Error()})
-		return
+	if req.CallbackURL != "" {
+		if err := security.ValidateCallbackURL(req.CallbackURL); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": err.Error()})
+			return
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
