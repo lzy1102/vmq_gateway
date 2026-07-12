@@ -81,8 +81,13 @@ func DeleteDevice(c *gin.Context) {
 
 func UploadQRCode(c *gin.Context) {
 	deviceID := c.PostForm("device_id")
-	if deviceID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "缺少 device_id"})
+	qrType := c.PostForm("type")
+	if deviceID == "" || qrType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "缺少参数"})
+		return
+	}
+	if qrType != "wechat" && qrType != "alipay" {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "type 仅支持 wechat/alipay"})
 		return
 	}
 
@@ -98,7 +103,7 @@ func UploadQRCode(c *gin.Context) {
 		return
 	}
 
-	savePath := fmt.Sprintf("web/public/qr/%s%s", deviceID, ext)
+	savePath := fmt.Sprintf("web/public/qr/%s_%s%s", deviceID, qrType, ext)
 	if err := os.MkdirAll("web/public/qr", 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "创建目录失败"})
 		return
@@ -108,10 +113,14 @@ func UploadQRCode(c *gin.Context) {
 		return
 	}
 
-	qrURL := "/qr/" + deviceID + ext
-	updates := map[string]interface{}{"qr_code": qrURL}
+	qrURL := fmt.Sprintf("/qr/%s_%s%s", deviceID, qrType, ext)
+	field := "wechat_qr"
+	if qrType == "alipay" {
+		field = "alipay_qr"
+	}
+	updates := map[string]interface{}{field: qrURL}
 	if err := service.UpdateDevice(c.Request.Context(), deviceID, updates); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新设备失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新失败"})
 		return
 	}
 

@@ -15,6 +15,7 @@ type createOrderReq struct {
 	ServiceID   string `json:"service_id" binding:"required"`
 	CallbackURL string `json:"callback_url"`
 	APIKey      string `json:"api_key" binding:"required"`
+	PayType     string `json:"pay_type"`
 }
 
 func CreateOrder(c *gin.Context) {
@@ -50,9 +51,9 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	qrURL := device.QRCode
-	if qrURL == "" {
-		qrURL = "/qr/alipay.png"
+	qrURL := device.AlipayQR
+	if req.PayType == "wechat" {
+		qrURL = device.WechatQR
 	}
 
 	amountYuan := float64(order.Amount) / 100.0

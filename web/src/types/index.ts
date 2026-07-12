@@ -18,8 +18,10 @@ export interface Order {
 export interface Device {
   device_id: string
   key: string
-  status: 'online' | 'offline'
-  last_heartbeat?: number
+  status: string
+  last_heartbeat: number
+  wechat_qr: string
+  alipay_qr: string
 }
 
 export interface Pool {

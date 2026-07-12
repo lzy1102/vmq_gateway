@@ -9,6 +9,7 @@ import (
 	"github.com/lzy1102/vmq_gateway/server/config"
 	"github.com/lzy1102/vmq_gateway/server/handler"
 	"github.com/lzy1102/vmq_gateway/server/middleware"
+	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
 )
 
@@ -22,6 +23,10 @@ func main() {
 		log.Fatalf("数据库初始化失败: %v", err)
 	}
 	log.Println("数据库连接成功")
+
+	store.DBInstance.AutoMigrate(ctx,
+		&model.Device{},
+	)
 
 	r := gin.Default()
 

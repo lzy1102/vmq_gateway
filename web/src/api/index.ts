@@ -59,9 +59,10 @@ export function updateDevice(deviceId: string, key?: string) {
   })
 }
 
-export function uploadQRCode(deviceId: string, file: File) {
+export function uploadQRCode(deviceId: string, type: 'wechat' | 'alipay', file: File) {
   const formData = new FormData()
   formData.append('device_id', deviceId)
+  formData.append('type', type)
   formData.append('file', file)
   return request<{ qr_url: string }>('/admin/device/qrcode', {
     method: 'POST',

@@ -74,8 +74,11 @@
               </td>
               <td>{{ d.last_heartbeat ? formatTime(d.last_heartbeat) : '从未' }}</td>
               <td class="actions">
-                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id)" title="上传收款码">
-                  📷
+                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id, 'wechat')" title="上传微信收款码">
+                  💚
+                </button>
+                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id, 'alipay')" title="上传支付宝收款码">
+                  💙
                 </button>
                 <button class="btn-small btn-warning" @click="handleRegenerateKey(d)" title="重新生成Key">
                   🔄
@@ -146,6 +149,7 @@ const pageSize = ref(10)
 const serverAddr = window.location.hostname + ':8080'
 const fileInput = ref<HTMLInputElement>()
 const uploadingDeviceId = ref('')
+const uploadingType = ref<'wechat' | 'alipay'>('wechat')
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -266,8 +270,9 @@ async function handleRegenerateKey(device: Device) {
   }
 }
 
-function triggerQRUpload(deviceId: string) {
+function triggerQRUpload(deviceId: string, type: 'wechat' | 'alipay') {
   uploadingDeviceId.value = deviceId
+  uploadingType.value = type
   fileInput.value?.click()
 }
 
@@ -276,7 +281,7 @@ async function handleQRUpload(e: Event) {
   const file = input.files?.[0]
   if (!file || !uploadingDeviceId.value) return
 
-  const resp = await uploadQRCode(uploadingDeviceId.value, file)
+  const resp = await uploadQRCode(uploadingDeviceId.value, uploadingType.value, file)
   if (resp.code === 1) {
     toast('收款码已上传')
     loadDevices()

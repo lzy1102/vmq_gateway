@@ -30,6 +30,8 @@ type GormDevice struct {
 	VmqKey        string `gorm:"column:vmq_key;size:128"`
 	Status        string `gorm:"size:16;default:offline"`
 	LastHeartbeat int64
+	WechatQR      string `gorm:"column:wechat_qr;size:256;default:'/qr/wechat.png'"`
+	AlipayQR      string `gorm:"column:alipay_qr;size:256;default:'/qr/alipay.png'"`
 }
 
 func (GormDevice) TableName() string { return "devices" }
