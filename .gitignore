@@ -45,3 +45,8 @@ docker-compose.override.yml
 # Frontend
 web/node_modules/
 web/dist/
+
+# Build artifacts
+deploy/vmq_gateway
+server/deploy/
+server/server

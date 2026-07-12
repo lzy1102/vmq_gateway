@@ -6,6 +6,7 @@ import (
 
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
+	"github.com/lzy1102/vmq_gateway/server/store/types"
 )
 
 func IdentifyDevice(ctx context.Context, key string) (*model.Device, error) {
@@ -65,6 +66,14 @@ func ListPools(ctx context.Context) ([]model.Pool, error) {
 	if err := store.DBInstance.List(ctx, "pools", &pools); err != nil {
 		return nil, err
 	}
+	for i := range pools {
+		ids, err := store.DBInstance.GetPoolDeviceIDs(ctx, pools[i].PoolID)
+		if err == nil {
+			pools[i].DeviceIDs = ids
+		} else {
+			pools[i].DeviceIDs = []string{}
+		}
+	}
 	return pools, nil
 }
 
@@ -92,7 +101,53 @@ func AddDeviceToPool(ctx context.Context, poolID, deviceID string) error {
 	return store.DBInstance.AddPoolDevice(ctx, poolID, deviceID)
 }
 
+func RemoveDeviceFromPool(ctx context.Context, poolID, deviceID string) error {
+	return store.DBInstance.RemovePoolDevice(ctx, poolID, deviceID)
+}
+
+func DeletePool(ctx context.Context, poolID string) error {
+	store.DBInstance.RemovePoolDevicesByPool(ctx, poolID)
+	return store.DBInstance.DeleteByField(ctx, "pools", "pool_id", poolID)
+}
+
 // AddBinding 添加绑定
 func AddBinding(ctx context.Context, binding *model.Binding) error {
 	return store.DBInstance.Create(ctx, "bindings", binding)
+}
+
+// DeleteDevice 删除设备
+func DeleteDevice(ctx context.Context, deviceID string) error {
+	return store.DBInstance.DeleteByField(ctx, "devices", "device_id", deviceID)
+}
+
+// UpdateDevice 更新设备
+func UpdateDevice(ctx context.Context, deviceID string, updates map[string]interface{}) error {
+	return store.DBInstance.UpdateByField(ctx, "devices", "device_id", deviceID, updates)
+}
+
+func ListDevicesWithPage(ctx context.Context, keyword string, page, pageSize int) (*types.PageResult, error) {
+	var devices []model.Device
+	return store.DBInstance.ListWithPage(ctx, "devices", &devices, page, pageSize, keyword, []string{"device_id", "vmq_key"})
+}
+
+func ListPoolsWithPage(ctx context.Context, keyword string, page, pageSize int) (*types.PageResult, error) {
+	var pools []model.Pool
+	result, err := store.DBInstance.ListWithPage(ctx, "pools", &pools, page, pageSize, keyword, []string{"pool_id", "name"})
+	if err != nil {
+		return nil, err
+	}
+	for i := range pools {
+		ids, err := store.DBInstance.GetPoolDeviceIDs(ctx, pools[i].PoolID)
+		if err == nil {
+			pools[i].DeviceIDs = ids
+		} else {
+			pools[i].DeviceIDs = []string{}
+		}
+	}
+	return result, nil
+}
+
+func ListBindingsWithPage(ctx context.Context, keyword string, page, pageSize int) (*types.PageResult, error) {
+	var bindings []model.Binding
+	return store.DBInstance.ListWithPage(ctx, "bindings", &bindings, page, pageSize, keyword, []string{"service_id", "callback_url"})
 }

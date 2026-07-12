@@ -44,8 +44,12 @@ func main() {
 	{
 		protected.POST("/device", handler.AddDevice)
 		protected.GET("/devices", handler.ListDevices)
+		protected.DELETE("/device", handler.DeleteDevice)
+		protected.PUT("/device", handler.UpdateDevice)
 		protected.POST("/pool", handler.AddPool)
+		protected.DELETE("/pool", handler.DeletePool)
 		protected.POST("/pool/device", handler.AddDeviceToPool)
+		protected.DELETE("/pool/device", handler.RemoveDeviceFromPool)
 		protected.GET("/pools", handler.ListPools)
 		protected.POST("/binding", handler.AddBinding)
 		protected.GET("/bindings", handler.ListBindings)

@@ -2,9 +2,11 @@ package gorm
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/lzy1102/vmq_gateway/server/model"
+	storetypes "github.com/lzy1102/vmq_gateway/server/store/types"
 	"gorm.io/gorm"
 )
 
@@ -124,6 +126,53 @@ func (g *GormDB) List(ctx context.Context, table string, dest interface{}) error
 	return g.db.WithContext(ctx).Table(table).Find(dest).Error
 }
 
+// ListWithPage 分页查询
+func (g *GormDB) ListWithPage(ctx context.Context, table string, dest interface{}, page, pageSize int, keyword string, fields []string) (*storetypes.PageResult, error) {
+	db := g.db.WithContext(ctx).Table(table)
+
+	if keyword != "" && len(fields) > 0 {
+		like := "%" + keyword + "%"
+		conditions := make([]string, 0, len(fields))
+		args := make([]interface{}, 0, len(fields))
+		for _, field := range fields {
+			conditions = append(conditions, field+" LIKE ?")
+			args = append(args, like)
+		}
+		where := strings.Join(conditions, " OR ")
+		db = db.Where(where, args...)
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
+	if err := db.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(dest).Error; err != nil {
+		return nil, err
+	}
+
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	return &storetypes.PageResult{
+		Items:      dest,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
+}
+
 func (g *GormDB) Claim(ctx context.Context, table string, amount int64, dest interface{}) error {
 	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Table(table).Where("amount = ? AND status = ?", amount, model.StatusPending).First(dest).Error; err != nil {
@@ -198,6 +247,11 @@ func (g *GormDB) AddPoolDevice(ctx context.Context, poolID, deviceID string) err
 func (g *GormDB) RemovePoolDevice(ctx context.Context, poolID, deviceID string) error {
 	return g.db.WithContext(ctx).Table("pool_devices").
 		Where("pool_id = ? AND device_id = ?", poolID, deviceID).Delete(nil).Error
+}
+
+func (g *GormDB) RemovePoolDevicesByPool(ctx context.Context, poolID string) error {
+	return g.db.WithContext(ctx).Table("pool_devices").
+		Where("pool_id = ?", poolID).Delete(nil).Error
 }
 
 // GetPoolDeviceIDs 获取池子中的设备 ID 列表

@@ -6,17 +6,18 @@ export interface ApiResponse<T = any> {
 
 export interface Order {
   trade_no: string
-  user_name: string
+  service_id: string
+  callback_url: string
   amount: number
-  stream_number: number
-  status: 'pending' | 'processing' | 'paid' | 'cancelled' | 'expired'
+  device_id?: string
+  status: 'pending' | 'paid' | 'cancelled' | 'expired'
   created_at: number
   paid_at?: number
 }
 
 export interface Device {
   device_id: string
-  vmq_key: string
+  key: string
   status: 'online' | 'offline'
   last_heartbeat?: number
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,12 +42,60 @@ func AddDevice(c *gin.Context) {
 }
 
 func ListDevices(c *gin.Context) {
-	devices, err := service.ListDevices(c.Request.Context())
+	keyword := c.Query("keyword")
+	page := 1
+	pageSize := 10
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := c.Query("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+	result, err := service.ListDevicesWithPage(c.Request.Context(), keyword, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": 1, "data": devices})
+	c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"items": result.Items, "total": result.Total, "page": result.Page, "page_size": result.PageSize, "total_pages": result.TotalPages}})
+}
+
+type deleteDeviceReq struct {
+	DeviceID string `json:"device_id" binding:"required"`
+}
+
+func DeleteDevice(c *gin.Context) {
+	var req deleteDeviceReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+	if err := service.DeleteDevice(c.Request.Context(), req.DeviceID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "删除失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "删除成功"})
+}
+
+type updateDeviceReq struct {
+	DeviceID string `json:"device_id" binding:"required"`
+	Key      string `json:"key"`
+}
+
+func UpdateDevice(c *gin.Context) {
+	var req updateDeviceReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+ updates := map[string]interface{}{}
+	if req.Key != "" {
+		updates["vmq_key"] = req.Key
+	}
+	if err := service.UpdateDevice(c.Request.Context(), req.DeviceID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "更新成功"})
 }
 
 type addPoolReq struct {
@@ -91,13 +140,57 @@ func AddDeviceToPool(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "成功"})
 }
 
+type deletePoolReq struct {
+	PoolID string `json:"pool_id" binding:"required"`
+}
+
+func DeletePool(c *gin.Context) {
+	var req deletePoolReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+	if err := service.DeletePool(c.Request.Context(), req.PoolID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "删除失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "删除成功"})
+}
+
+type removeDeviceFromPoolReq struct {
+	PoolID   string `json:"pool_id" binding:"required"`
+	DeviceID string `json:"device_id" binding:"required"`
+}
+
+func RemoveDeviceFromPool(c *gin.Context) {
+	var req removeDeviceFromPoolReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+	if err := service.RemoveDeviceFromPool(c.Request.Context(), req.PoolID, req.DeviceID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "移除失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "删除成功"})
+}
+
 func ListPools(c *gin.Context) {
-	pools, err := service.ListPools(c.Request.Context())
+	keyword := c.Query("keyword")
+	page := 1
+	pageSize := 10
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := c.Query("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+	result, err := service.ListPoolsWithPage(c.Request.Context(), keyword, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": 1, "data": pools})
+	c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"items": result.Items, "total": result.Total, "page": result.Page, "page_size": result.PageSize, "total_pages": result.TotalPages}})
 }
 
 type addBindingReq struct {
@@ -128,10 +221,19 @@ func AddBinding(c *gin.Context) {
 }
 
 func ListBindings(c *gin.Context) {
-	bindings, err := service.ListBindings(c.Request.Context())
+	keyword := c.Query("keyword")
+	page := 1
+	pageSize := 10
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := c.Query("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+	result, err := service.ListBindingsWithPage(c.Request.Context(), keyword, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": 1, "data": bindings})
+	c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"items": result.Items, "total": result.Total, "page": result.Page, "page_size": result.PageSize, "total_pages": result.TotalPages}})
 }

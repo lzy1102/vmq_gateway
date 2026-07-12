@@ -7,16 +7,16 @@ async function request<T>(url: string, options?: RequestInit): Promise<ApiRespon
 
 // ========== 支付相关 ==========
 
-export function createOrder(userName: string, pkgName: string) {
-  return request<{ trade_no: string; amount: number; qr_url: string }>('/api/recharge/vmpay', {
+export function createOrder(amount: number, serviceId: string, callbackUrl: string) {
+  return request<{ order_id: string; amount: number; amount_str: number; device_id: string; qr_url: string }>('/api/order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_name: userName, pkg_name: pkgName })
+    body: JSON.stringify({ amount, service_id: serviceId, callback_url: callbackUrl })
   })
 }
 
-export function queryOrderStatus(tradeNo: string) {
-  return request<{ status: string; amount?: number }>('/api/recharge/vmpay-status?trade_no=' + encodeURIComponent(tradeNo))
+export function queryOrderStatus(orderId: string) {
+  return request<{ status: string; amount?: number }>('/api/order/status?order_id=' + encodeURIComponent(orderId))
 }
 
 // ========== 管理后台 ==========
@@ -41,8 +41,33 @@ export function addDevice(deviceId: string) {
   })
 }
 
-export function listDevices() {
-  return request<Device[]>('/admin/devices')
+export function deleteDevice(deviceId: string) {
+  return request('/admin/device', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_id: deviceId })
+  })
+}
+
+export function updateDevice(deviceId: string, key?: string) {
+  const body: Record<string, string> = { device_id: deviceId }
+  if (key) body.key = key
+  return request('/admin/device', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+}
+
+export function listDevices(params?: { keyword?: string; page?: number; page_size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.keyword) query.set('keyword', params.keyword)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.page_size) query.set('page_size', String(params.page_size))
+  const qs = query.toString()
+  return request<{ items: Device[]; total: number; page: number; page_size: number; total_pages: number }>(
+    '/admin/devices' + (qs ? '?' + qs : '')
+  )
 }
 
 export function addPool(poolId: string, name: string) {
@@ -61,8 +86,31 @@ export function addDeviceToPool(poolId: string, deviceId: string) {
   })
 }
 
-export function listPools() {
-  return request<Pool[]>('/admin/pools')
+export function removeDeviceFromPool(poolId: string, deviceId: string) {
+  return request('/admin/pool/device', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pool_id: poolId, device_id: deviceId })
+  })
+}
+
+export function deletePool(poolId: string) {
+  return request('/admin/pool', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pool_id: poolId })
+  })
+}
+
+export function listPools(params?: { keyword?: string; page?: number; page_size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.keyword) query.set('keyword', params.keyword)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.page_size) query.set('page_size', String(params.page_size))
+  const qs = query.toString()
+  return request<{ items: Pool[]; total: number; page: number; page_size: number; total_pages: number }>(
+    '/admin/pools' + (qs ? '?' + qs : '')
+  )
 }
 
 export function addBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string) {
@@ -76,6 +124,13 @@ export function addBinding(serviceId: string, callbackUrl: string, deviceId?: st
   })
 }
 
-export function listBindings() {
-  return request<Binding[]>('/admin/bindings')
+export function listBindings(params?: { keyword?: string; page?: number; page_size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.keyword) query.set('keyword', params.keyword)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.page_size) query.set('page_size', String(params.page_size))
+  const qs = query.toString()
+  return request<{ items: Binding[]; total: number; page: number; page_size: number; total_pages: number }>(
+    '/admin/bindings' + (qs ? '?' + qs : '')
+  )
 }

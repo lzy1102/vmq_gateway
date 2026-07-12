@@ -30,10 +30,9 @@ import { queryOrderStatus } from '@/api'
 
 const route = useRoute()
 
-const tradeNo = ref(route.query.trade_no as string || '')
+const orderId = ref(route.query.order_id as string || '')
 const amountCents = ref(parseInt(route.query.amount as string) || 0)
 const qrUrl = ref(route.query.qr as string || '/qr/alipay.png')
-const pkgName = ref(route.query.pkg_name as string || '')
 
 const amountDisplay = computed(() => (amountCents.value / 100).toFixed(2))
 
@@ -105,11 +104,11 @@ function startCountdown() {
 }
 
 function startPolling() {
-  if (!tradeNo.value) return
+  if (!orderId.value) return
   pollTimer = setInterval(async () => {
     if (settled.value) return
     try {
-      const resp = await queryOrderStatus(tradeNo.value)
+      const resp = await queryOrderStatus(orderId.value)
       if (resp.code === 1 && resp.data) {
         updateStatus(resp.data.status)
       }

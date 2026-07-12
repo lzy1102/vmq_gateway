@@ -1,6 +1,10 @@
 package store
 
-import "context"
+import (
+	"context"
+
+	"github.com/lzy1102/vmq_gateway/server/store/types"
+)
 
 type DB interface {
 	AutoMigrate(ctx context.Context, models ...interface{}) error
@@ -12,6 +16,7 @@ type DB interface {
 	Update(ctx context.Context, table string, id string, updates map[string]interface{}) error
 	Delete(ctx context.Context, table string, id string) error
 	List(ctx context.Context, table string, dest interface{}) error
+	ListWithPage(ctx context.Context, table string, dest interface{}, page, pageSize int, keyword string, fields []string) (*types.PageResult, error)
 
 	Claim(ctx context.Context, table string, amount int64, dest interface{}) error
 	Upsert(ctx context.Context, table string, key string, value interface{}, update map[string]interface{}) error
@@ -25,8 +30,11 @@ type DB interface {
 	UpdateHeartbeat(ctx context.Context, deviceID string) error
 	AddPoolDevice(ctx context.Context, poolID, deviceID string) error
 	RemovePoolDevice(ctx context.Context, poolID, deviceID string) error
+	RemovePoolDevicesByPool(ctx context.Context, poolID string) error
 	GetPoolDeviceIDs(ctx context.Context, poolID string) ([]string, error)
 	GetPoolsByDevice(ctx context.Context, deviceID string, dest interface{}) error
 }
+
+type PageResult = types.PageResult
 
 var DBInstance DB

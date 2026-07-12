@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/lzy1102/vmq_gateway/server/model"
+	storetypes "github.com/lzy1102/vmq_gateway/server/store/types"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -99,6 +100,53 @@ func (m *MongoDB) List(ctx context.Context, table string, dest interface{}) erro
 	return cursor.All(ctx, dest)
 }
 
+func (m *MongoDB) ListWithPage(ctx context.Context, table string, dest interface{}, page, pageSize int, keyword string, fields []string) (*storetypes.PageResult, error) {
+	filter := bson.M{}
+	if keyword != "" && len(fields) > 0 {
+		conditions := make([]bson.M, 0, len(fields))
+		for _, field := range fields {
+			conditions = append(conditions, bson.M{field: bson.M{"$regex": keyword, "$options": "i"}})
+		}
+		filter = bson.M{"$or": conditions}
+	}
+
+	total, err := m.db.Collection(table).CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+	skip := int64((page - 1) * pageSize)
+	limit := int64(pageSize)
+
+	opts := options.Find().SetSkip(skip).SetLimit(limit)
+	cursor, err := m.db.Collection(table).Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	if err := cursor.All(ctx, dest); err != nil {
+		return nil, err
+	}
+
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	return &storetypes.PageResult{
+		Items:      dest,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
+}
+
 func (m *MongoDB) Claim(ctx context.Context, table string, amount int64, dest interface{}) error {
 	filter := bson.M{"amount": amount, "status": model.StatusPending}
 	update := bson.M{"$set": bson.M{"status": model.StatusPaid}}
@@ -176,6 +224,13 @@ func (m *MongoDB) RemovePoolDevice(ctx context.Context, poolID, deviceID string)
 	_, err := m.db.Collection("pools").UpdateOne(ctx,
 		bson.M{"pool_id": poolID},
 		bson.M{"$pull": bson.M{"device_ids": deviceID}})
+	return err
+}
+
+func (m *MongoDB) RemovePoolDevicesByPool(ctx context.Context, poolID string) error {
+	_, err := m.db.Collection("pools").UpdateOne(ctx,
+		bson.M{"pool_id": poolID},
+		bson.M{"$set": bson.M{"device_ids": []string{}}})
 	return err
 }
 
