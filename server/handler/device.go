@@ -220,6 +220,52 @@ func AddBinding(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "成功"})
 }
 
+type updateBindingReq struct {
+	ServiceID   string `json:"service_id" binding:"required"`
+	CallbackURL string `json:"callback_url" binding:"required"`
+	DeviceID    *string `json:"device_id"`
+	PoolID      *string `json:"pool_id"`
+}
+
+func UpdateBinding(c *gin.Context) {
+	var req updateBindingReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+	updates := map[string]interface{}{
+		"callback_url": req.CallbackURL,
+	}
+	if req.DeviceID != nil {
+		updates["device_id"] = *req.DeviceID
+	}
+	if req.PoolID != nil {
+		updates["pool_id"] = *req.PoolID
+	}
+	if err := service.UpdateBinding(c.Request.Context(), req.ServiceID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "更新成功"})
+}
+
+type deleteBindingReq struct {
+	ServiceID string `json:"service_id" binding:"required"`
+}
+
+func DeleteBinding(c *gin.Context) {
+	var req deleteBindingReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "参数错误"})
+		return
+	}
+	if err := service.DeleteBinding(c.Request.Context(), req.ServiceID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "删除失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "删除成功"})
+}
+
 func ListBindings(c *gin.Context) {
 	keyword := c.Query("keyword")
 	page := 1

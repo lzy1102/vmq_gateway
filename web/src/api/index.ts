@@ -124,6 +124,25 @@ export function addBinding(serviceId: string, callbackUrl: string, deviceId?: st
   })
 }
 
+export function updateBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string) {
+  const body: Record<string, string> = { service_id: serviceId, callback_url: callbackUrl }
+  if (deviceId !== undefined) body.device_id = deviceId
+  if (poolId !== undefined) body.pool_id = poolId
+  return request('/admin/binding', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+}
+
+export function deleteBinding(serviceId: string) {
+  return request('/admin/binding', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service_id: serviceId })
+  })
+}
+
 export function listBindings(params?: { keyword?: string; page?: number; page_size?: number }) {
   const query = new URLSearchParams()
   if (params?.keyword) query.set('keyword', params.keyword)

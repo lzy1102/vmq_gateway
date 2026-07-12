@@ -52,6 +52,8 @@ func main() {
 		protected.DELETE("/pool/device", handler.RemoveDeviceFromPool)
 		protected.GET("/pools", handler.ListPools)
 		protected.POST("/binding", handler.AddBinding)
+		protected.PUT("/binding", handler.UpdateBinding)
+		protected.DELETE("/binding", handler.DeleteBinding)
 		protected.GET("/bindings", handler.ListBindings)
 	}
 

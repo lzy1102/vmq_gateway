@@ -115,6 +115,14 @@ func AddBinding(ctx context.Context, binding *model.Binding) error {
 	return store.DBInstance.Create(ctx, "bindings", binding)
 }
 
+func UpdateBinding(ctx context.Context, serviceID string, updates map[string]interface{}) error {
+	return store.DBInstance.UpdateByField(ctx, "bindings", "service_id", serviceID, updates)
+}
+
+func DeleteBinding(ctx context.Context, serviceID string) error {
+	return store.DBInstance.DeleteByField(ctx, "bindings", "service_id", serviceID)
+}
+
 // DeleteDevice 删除设备
 func DeleteDevice(ctx context.Context, deviceID string) error {
 	return store.DBInstance.DeleteByField(ctx, "devices", "device_id", deviceID)

@@ -68,6 +68,7 @@
               <th>回调URL</th>
               <th>绑定设备</th>
               <th>绑定池</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +84,10 @@
               <td>
                 <span v-if="b.pool_id" class="binding-tag pool">{{ b.pool_id }}</span>
                 <span v-else class="no-binding">-</span>
+              </td>
+              <td class="actions">
+                <button class="btn-icon" @click="openEdit(b)" title="编辑">✏️</button>
+                <button class="btn-icon" @click="handleDeleteBinding(b.service_id)" title="删除">🗑️</button>
               </td>
             </tr>
           </tbody>
@@ -120,6 +125,35 @@
       <p class="hint">你的服务需要返回 <code>{"code": 1}</code> 表示处理成功</p>
     </div>
 
+    <!-- 编辑弹窗 -->
+    <div v-if="editingBinding" class="modal-overlay" @click.self="closeEdit">
+      <div class="modal">
+        <h3>编辑绑定 - {{ editingBinding.service_id }}</h3>
+        <div class="form-group">
+          <label>回调URL</label>
+          <input v-model="editCallbackUrl" placeholder="https://your-server/callback" />
+        </div>
+        <div class="form-group">
+          <label>绑定设备</label>
+          <select v-model="editBindDevice">
+            <option value="">不绑定设备</option>
+            <option v-for="d in devices" :key="d.device_id" :value="d.device_id">{{ d.device_id }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>绑定池</label>
+          <select v-model="editBindPool">
+            <option value="">不绑定池</option>
+            <option v-for="p in pools" :key="p.pool_id" :value="p.pool_id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="closeEdit">取消</button>
+          <button class="btn-primary" @click="handleUpdateBinding">保存</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div v-if="toastMsg" class="toast" :class="toastType">{{ toastMsg }}</div>
   </div>
@@ -128,7 +162,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import type { Binding, Device, Pool } from '@/types'
-import { listBindings, addBinding, listDevices, listPools } from '@/api'
+import { listBindings, addBinding, updateBinding, deleteBinding, listDevices, listPools } from '@/api'
 
 const bindings = ref<Binding[]>([])
 const devices = ref<Device[]>([])
@@ -214,6 +248,50 @@ async function handleAddBinding() {
     loadData()
   } else {
     toast(resp.msg || '创建失败', 'error')
+  }
+}
+
+const editingBinding = ref<Binding | null>(null)
+const editCallbackUrl = ref('')
+const editBindDevice = ref('')
+const editBindPool = ref('')
+
+function openEdit(b: Binding) {
+  editingBinding.value = b
+  editCallbackUrl.value = b.callback_url
+  editBindDevice.value = b.device_id || ''
+  editBindPool.value = b.pool_id || ''
+}
+
+function closeEdit() {
+  editingBinding.value = null
+}
+
+async function handleUpdateBinding() {
+  if (!editingBinding.value) return
+  const resp = await updateBinding(
+    editingBinding.value.service_id,
+    editCallbackUrl.value.trim(),
+    editBindDevice.value.trim() || undefined,
+    editBindPool.value.trim() || undefined
+  )
+  if (resp.code === 1) {
+    toast('绑定已更新')
+    closeEdit()
+    loadData()
+  } else {
+    toast(resp.msg || '更新失败', 'error')
+  }
+}
+
+async function handleDeleteBinding(serviceId: string) {
+  if (!confirm('确定要删除此绑定吗？')) return
+  const resp = await deleteBinding(serviceId)
+  if (resp.code === 1) {
+    toast('绑定已删除')
+    loadData()
+  } else {
+    toast(resp.msg || '删除失败', 'error')
   }
 }
 
@@ -417,6 +495,90 @@ th {
   font-family: 'Monaco', 'Menlo', monospace;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.btn-icon:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.modal h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.modal .form-group {
+  margin-bottom: 12px;
+}
+
+.modal .form-group label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.modal .form-group input,
+.modal .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #f5f5f5;
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
 }
 
 .toast {
