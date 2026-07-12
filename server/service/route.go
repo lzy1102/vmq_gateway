@@ -123,6 +123,17 @@ func DeleteBinding(ctx context.Context, serviceID string) error {
 	return store.DBInstance.DeleteByField(ctx, "bindings", "service_id", serviceID)
 }
 
+func VerifyAPIKey(ctx context.Context, serviceID, apiKey string) error {
+	var binding model.Binding
+	if err := store.DBInstance.FindByField(ctx, "bindings", "service_id", serviceID, &binding); err != nil {
+		return fmt.Errorf("服务不存在")
+	}
+	if binding.APIKey != apiKey {
+		return fmt.Errorf("API Key 错误")
+	}
+	return nil
+}
+
 // DeleteDevice 删除设备
 func DeleteDevice(ctx context.Context, deviceID string) error {
 	return store.DBInstance.DeleteByField(ctx, "devices", "device_id", deviceID)

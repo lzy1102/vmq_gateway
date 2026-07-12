@@ -43,6 +43,19 @@ fi
 green "设备ID: $DEVICE_ID"
 green "Key: $KEY"
 
+info "=== 1.5 创建服务绑定 ==="
+RESP=$(curl -s -X POST "$BASE_URL/admin/binding" \
+  -H 'Content-Type: application/json' \
+  -b "$COOKIE_FILE" \
+  -d "{\"service_id\":\"test_service\",\"callback_url\":\"https://httpbin.org/post\"}")
+echo "$RESP"
+API_KEY=$(echo "$RESP" | grep -o '"api_key":"[^"]*"' | cut -d'"' -f4)
+if [ -z "$API_KEY" ]; then
+  red "创建绑定失败"
+  exit 1
+fi
+green "API Key: $API_KEY"
+
 info "=== 2. 模拟心跳 ==="
 T=$(($(date +%s%N) / 1000000))
 SIGN=$(md5 "${T}${KEY}")
@@ -57,10 +70,9 @@ fi
 sleep 1
 
 info "=== 3. 创建订单 ==="
-CALLBACK_URL="https://httpbin.org/post"
 RESP=$(curl -s -X POST "$BASE_URL/api/order" \
   -H 'Content-Type: application/json' \
-  -d "{\"amount\":100, \"service_id\":\"test_service\", \"callback_url\":\"$CALLBACK_URL\"}")
+  -d "{\"amount\":100, \"service_id\":\"test_service\", \"callback_url\":\"https://httpbin.org/post\", \"api_key\":\"$API_KEY\"}")
 echo "$RESP"
 ORDER_ID=$(echo "$RESP" | grep -o '"order_id":"[^"]*"' | cut -d'"' -f4)
 AMOUNT_YUAN=$(echo "$RESP" | grep -o '"amount_str":[0-9.]*' | cut -d':' -f2)

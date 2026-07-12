@@ -207,17 +207,19 @@ func AddBinding(c *gin.Context) {
 		return
 	}
 
+	apiKey := generateKey()
 	binding := &model.Binding{
 		ServiceID:   req.ServiceID,
 		CallbackURL: req.CallbackURL,
 		DeviceID:    req.DeviceID,
 		PoolID:      req.PoolID,
+		APIKey:      apiKey,
 	}
 	if err := service.AddBinding(c.Request.Context(), binding); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "添加失败"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "成功"})
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "成功", "data": gin.H{"api_key": apiKey}})
 }
 
 type updateBindingReq struct {

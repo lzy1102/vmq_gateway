@@ -65,6 +65,7 @@
           <thead>
             <tr>
               <th>服务ID</th>
+              <th>API Key</th>
               <th>回调URL</th>
               <th>绑定设备</th>
               <th>绑定池</th>
@@ -74,6 +75,9 @@
           <tbody>
             <tr v-for="b in bindings" :key="b.service_id">
               <td class="service-id">{{ b.service_id }}</td>
+              <td>
+                <code class="api-key" @click="copyKey(b.api_key)" title="点击复制">{{ b.api_key }}</code>
+              </td>
               <td>
                 <code class="callback-url">{{ b.callback_url }}</code>
               </td>
@@ -192,6 +196,33 @@ function toast(msg: string, type: 'success' | 'error' = 'success') {
   toastType.value = type
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = setTimeout(() => { toastMsg.value = '' }, 3000)
+}
+
+function copyKey(key: string) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(key).then(
+      () => toast('已复制到剪贴板'),
+      () => fallbackCopy(key)
+    )
+  } else {
+    fallbackCopy(key)
+  }
+}
+
+function fallbackCopy(text: string) {
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  try {
+    document.execCommand('copy')
+    toast('已复制到剪贴板')
+  } catch {
+    toast('复制失败: ' + text, 'error')
+  }
+  document.body.removeChild(textarea)
 }
 
 watch([searchKeyword, pageSize], () => {
@@ -430,6 +461,23 @@ th {
 
 .service-id {
   font-weight: 500;
+}
+
+.api-key {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.api-key:hover {
+  background: #e9ecef;
 }
 
 .callback-url {

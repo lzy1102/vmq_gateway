@@ -56,6 +56,7 @@ type GormBinding struct {
 	CallbackURL string `gorm:"size:512"`
 	DeviceID    string `gorm:"size:128"`
 	PoolID      string `gorm:"size:128"`
+	APIKey      string `gorm:"size:128"`
 }
 
 func (GormBinding) TableName() string { return "bindings" }

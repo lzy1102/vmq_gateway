@@ -31,6 +31,7 @@ export interface Pool {
 export interface Binding {
   service_id: string
   callback_url: string
-  device_id?: string
-  pool_id?: string
+  device_id: string
+  pool_id: string
+  api_key: string
 }

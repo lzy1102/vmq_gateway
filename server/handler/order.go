@@ -14,6 +14,7 @@ type createOrderReq struct {
 	Amount      int64  `json:"amount" binding:"required"`
 	ServiceID   string `json:"service_id" binding:"required"`
 	CallbackURL string `json:"callback_url" binding:"required"`
+	APIKey      string `json:"api_key" binding:"required"`
 }
 
 func CreateOrder(c *gin.Context) {
@@ -35,6 +36,11 @@ func CreateOrder(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
+
+	if err := service.VerifyAPIKey(ctx, req.ServiceID, req.APIKey); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"code": 0, "msg": "API Key 错误"})
+		return
+	}
 
 	order, device, err := service.CreateOrder(ctx, req.Amount, req.ServiceID, req.CallbackURL)
 	if err != nil {
