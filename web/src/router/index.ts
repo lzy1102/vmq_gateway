@@ -5,9 +5,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'payment',
-      component: () => import('@/views/Payment.vue'),
-      meta: { requiresAuth: true }
+      redirect: '/dashboard'
     },
     {
       path: '/login',
