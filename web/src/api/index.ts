@@ -59,6 +59,16 @@ export function updateDevice(deviceId: string, key?: string) {
   })
 }
 
+export function uploadQRCode(deviceId: string, file: File) {
+  const formData = new FormData()
+  formData.append('device_id', deviceId)
+  formData.append('file', file)
+  return request<{ qr_url: string }>('/admin/device/qrcode', {
+    method: 'POST',
+    body: formData
+  })
+}
+
 export function listDevices(params?: { keyword?: string; page?: number; page_size?: number }) {
   const query = new URLSearchParams()
   if (params?.keyword) query.set('keyword', params.keyword)

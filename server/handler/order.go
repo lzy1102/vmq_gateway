@@ -50,6 +50,11 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	qrURL := device.QRCode
+	if qrURL == "" {
+		qrURL = "/qr/alipay.png"
+	}
+
 	amountYuan := float64(order.Amount) / 100.0
 	c.JSON(http.StatusOK, gin.H{
 		"code": 1,
@@ -58,7 +63,7 @@ func CreateOrder(c *gin.Context) {
 			"amount":     order.Amount,
 			"amount_str": amountYuan,
 			"device_id":  device.DeviceID,
-			"qr_url":     "/qr/alipay.png",
+			"qr_url":     qrURL,
 		},
 	})
 }

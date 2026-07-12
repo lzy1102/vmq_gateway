@@ -5,6 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lzy1102/vmq_gateway/server/model"
@@ -74,6 +77,45 @@ func DeleteDevice(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "删除成功"})
+}
+
+func UploadQRCode(c *gin.Context) {
+	deviceID := c.PostForm("device_id")
+	if deviceID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "缺少 device_id"})
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "请选择文件"})
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 0, "msg": "仅支持 png/jpg 格式"})
+		return
+	}
+
+	savePath := fmt.Sprintf("web/public/qr/%s%s", deviceID, ext)
+	if err := os.MkdirAll("web/public/qr", 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "创建目录失败"})
+		return
+	}
+	if err := c.SaveUploadedFile(file, savePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "保存失败"})
+		return
+	}
+
+	qrURL := "/qr/" + deviceID + ext
+	updates := map[string]interface{}{"qr_code": qrURL}
+	if err := service.UpdateDevice(c.Request.Context(), deviceID, updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新设备失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"code": 1, "msg": "上传成功", "data": gin.H{"qr_url": qrURL}})
 }
 
 type updateDeviceReq struct {

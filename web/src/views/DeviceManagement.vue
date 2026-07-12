@@ -74,6 +74,9 @@
               </td>
               <td>{{ d.last_heartbeat ? formatTime(d.last_heartbeat) : '从未' }}</td>
               <td class="actions">
+                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id)" title="上传收款码">
+                  📷
+                </button>
                 <button class="btn-small btn-warning" @click="handleRegenerateKey(d)" title="重新生成Key">
                   🔄
                 </button>
@@ -112,6 +115,8 @@
       </ol>
     </div>
 
+    <input ref="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none" @change="handleQRUpload" />
+
     <!-- Toast -->
     <div v-if="toastMsg" class="toast" :class="toastType">{{ toastMsg }}</div>
   </div>
@@ -120,7 +125,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import type { Device } from '@/types'
-import { listDevices, addDevice, deleteDevice, updateDevice } from '@/api'
+import { listDevices, addDevice, deleteDevice, updateDevice, uploadQRCode } from '@/api'
 
 const devices = ref<Device[]>([])
 const total = ref(0)
@@ -139,6 +144,8 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 
 const serverAddr = window.location.hostname + ':8080'
+const fileInput = ref<HTMLInputElement>()
+const uploadingDeviceId = ref('')
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -257,6 +264,27 @@ async function handleRegenerateKey(device: Device) {
   } else {
     toast(resp.msg || '更新失败', 'error')
   }
+}
+
+function triggerQRUpload(deviceId: string) {
+  uploadingDeviceId.value = deviceId
+  fileInput.value?.click()
+}
+
+async function handleQRUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !uploadingDeviceId.value) return
+
+  const resp = await uploadQRCode(uploadingDeviceId.value, file)
+  if (resp.code === 1) {
+    toast('收款码已上传')
+    loadDevices()
+  } else {
+    toast(resp.msg || '上传失败', 'error')
+  }
+  input.value = ''
+  uploadingDeviceId.value = ''
 }
 
 onMounted(loadDevices)
@@ -509,6 +537,11 @@ th {
 
 .btn-danger {
   background: var(--danger);
+  color: #fff;
+}
+
+.btn-info {
+  background: #17a2b8;
   color: #fff;
 }
 

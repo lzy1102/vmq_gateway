@@ -46,6 +46,7 @@ func main() {
 		protected.GET("/devices", handler.ListDevices)
 		protected.DELETE("/device", handler.DeleteDevice)
 		protected.PUT("/device", handler.UpdateDevice)
+		protected.POST("/device/qrcode", handler.UploadQRCode)
 		protected.POST("/pool", handler.AddPool)
 		protected.DELETE("/pool", handler.DeletePool)
 		protected.POST("/pool/device", handler.AddDeviceToPool)
