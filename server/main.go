@@ -84,5 +84,11 @@ func expireOrdersLoop() {
 		} else if n > 0 {
 			log.Printf("[expire] 已过期 %d 个订单", n)
 		}
+		n, err = service.CheckOfflineDevices(ctx, 60)
+		if err != nil {
+			log.Printf("[offline] 错误: %v", err)
+		} else if n > 0 {
+			log.Printf("[offline] %d 个设备已离线", n)
+		}
 	}
 }

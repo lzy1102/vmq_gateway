@@ -281,3 +281,11 @@ func (g *GormDB) ExpireStaleOrders(ctx context.Context) (int64, error) {
 		Update("status", model.StatusExpired)
 	return result.RowsAffected, result.Error
 }
+
+func (g *GormDB) ExpireOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error) {
+	cutoff := time.Now().Unix() - thresholdSec
+	result := g.db.WithContext(ctx).Table("devices").
+		Where("status = ? AND last_heartbeat > 0 AND last_heartbeat < ?", model.DeviceOnline, cutoff).
+		Update("status", model.DeviceOffline)
+	return result.RowsAffected, result.Error
+}

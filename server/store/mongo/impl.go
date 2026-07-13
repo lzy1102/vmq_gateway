@@ -277,3 +277,15 @@ func (m *MongoDB) ExpireStaleOrders(ctx context.Context) (int64, error) {
 	}
 	return result.ModifiedCount, nil
 }
+
+func (m *MongoDB) ExpireOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error) {
+	cutoff := time.Now().Unix() - thresholdSec
+	result, err := m.db.Collection("devices").UpdateMany(ctx,
+		bson.M{"status": model.DeviceOnline, "last_heartbeat": bson.M{"$gt": 0, "$lt": cutoff}},
+		bson.M{"$set": bson.M{"status": model.DeviceOffline}},
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.ModifiedCount, nil
+}

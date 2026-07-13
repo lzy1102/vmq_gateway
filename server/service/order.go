@@ -157,3 +157,7 @@ func ValidateTimestamp(tsSec int64) bool {
 func ExpireStaleOrders(ctx context.Context) (int64, error) {
 	return store.DBInstance.ExpireStaleOrders(ctx)
 }
+
+func CheckOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error) {
+	return store.DBInstance.ExpireOfflineDevices(ctx, thresholdSec)
+}

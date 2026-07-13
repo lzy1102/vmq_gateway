@@ -34,6 +34,7 @@ type DB interface {
 	GetPoolDeviceIDs(ctx context.Context, poolID string) ([]string, error)
 	GetPoolsByDevice(ctx context.Context, deviceID string, dest interface{}) error
 	ExpireStaleOrders(ctx context.Context) (int64, error)
+	ExpireOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error)
 }
 
 type PageResult = types.PageResult
