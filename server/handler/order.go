@@ -141,6 +141,7 @@ func QueryOrderStatus(c *gin.Context) {
 func ListOrders(c *gin.Context) {
 	keyword := c.Query("keyword")
 	status := c.Query("status")
+	serviceID := c.Query("service_id")
 	page := 1
 	pageSize := 10
 	if p := c.Query("page"); p != "" {
@@ -149,7 +150,7 @@ func ListOrders(c *gin.Context) {
 	if ps := c.Query("page_size"); ps != "" {
 		fmt.Sscanf(ps, "%d", &pageSize)
 	}
-	result, err := service.ListOrdersWithPage(c.Request.Context(), keyword, page, pageSize, status)
+	result, err := service.ListOrdersWithPage(c.Request.Context(), keyword, page, pageSize, status, serviceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
 		return

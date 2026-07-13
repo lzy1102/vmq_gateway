@@ -178,10 +178,11 @@ export interface Order {
   expire_at: number
 }
 
-export function listOrders(params?: { keyword?: string; status?: string; page?: number; page_size?: number }) {
+export function listOrders(params?: { keyword?: string; status?: string; service_id?: string; page?: number; page_size?: number }) {
   const query = new URLSearchParams()
   if (params?.keyword) query.set('keyword', params.keyword)
   if (params?.status) query.set('status', params.status)
+  if (params?.service_id) query.set('service_id', params.service_id)
   if (params?.page) query.set('page', String(params.page))
   if (params?.page_size) query.set('page_size', String(params.page_size))
   const qs = query.toString()

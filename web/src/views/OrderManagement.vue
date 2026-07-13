@@ -24,6 +24,12 @@
             <option value="cancelled">已取消</option>
           </select>
         </div>
+        <div class="filter-group">
+          <select v-model="serviceFilter">
+            <option value="">全部服务</option>
+            <option v-for="s in serviceList" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </div>
         <button class="btn-secondary" @click="loadOrders">🔄 刷新</button>
       </div>
 
@@ -103,6 +109,8 @@ const toastType = ref<'success' | 'error'>('success')
 
 const searchKeyword = ref('')
 const statusFilter = ref('')
+const serviceFilter = ref('')
+const serviceList = ref<string[]>([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -151,6 +159,7 @@ async function loadOrders() {
     const resp = await listOrders({
       keyword: searchKeyword.value,
       status: statusFilter.value,
+      service_id: serviceFilter.value,
       page: currentPage.value,
       page_size: pageSize.value
     })
@@ -158,13 +167,18 @@ async function loadOrders() {
       orders.value = resp.data.items || []
       total.value = resp.data.total
       totalPages.value = resp.data.total_pages
+      const services = new Set<string>()
+      for (const o of orders.value) {
+        if (o.service_id) services.add(o.service_id)
+      }
+      serviceList.value = [...services].sort()
     }
   } finally {
     loading.value = false
   }
 }
 
-watch([searchKeyword, statusFilter, pageSize], () => {
+watch([searchKeyword, statusFilter, serviceFilter, pageSize], () => {
   currentPage.value = 1
   loadOrders()
 })
