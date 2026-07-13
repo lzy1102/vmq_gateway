@@ -74,11 +74,11 @@
               </td>
               <td>{{ d.last_heartbeat ? formatTime(d.last_heartbeat) : '从未' }}</td>
               <td class="actions">
-                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id, 'wechat')" title="上传微信收款码">
-                  💚
+                <button class="btn-small btn-qr btn-wechat" @click="triggerQRUpload(d.device_id, 'wechat')" title="上传微信收款码">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66l-.7 2.1 2.46-1.23c.78.22 1.6.37 2.46.37.34 0 .68-.02 1-.07A5.95 5.95 0 0 1 10 14c0-3.31 3.13-6 7-6 .34 0 .68.02 1 .07C18 5.14 14.14 4 9.5 4zm-3 4.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM22 14c0-2.76-2.69-5-6-5s-6 2.24-6 5 2.69 5 6 5c.7 0 1.37-.1 2-.3l1.8.9-.5-1.5C21.07 17.04 22 15.62 22 14zm-8-1a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm4 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>
                 </button>
-                <button class="btn-small btn-info" @click="triggerQRUpload(d.device_id, 'alipay')" title="上传支付宝收款码">
-                  💙
+                <button class="btn-small btn-qr btn-alipay" @click="triggerQRUpload(d.device_id, 'alipay')" title="上传支付宝收款码">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21.4 14.2c-.1-.1-3.1-1.4-5.8-2.1.5-1 .8-2.1.9-3.2h-3.5v-1h4.1V6.5h-4.1V4h-2v2.5H6.4v1.4h4.1v1H7.5v1.4h5.6c-.2.6-.5 1.2-.8 1.7-2.5-.7-5.1-.8-5.3-.8H5.8l-1.6 1.5c.3.6.7 1.2 1.2 1.7l1.4-1.2s2.6.8 5.9 2.2c-.1.4-.2.8-.2 1.2 0 3.6 3.2 6.5 7.1 6.5.5 0 .9-.1 1.4-.1C19.9 21.5 22 18.2 22 14.3v-.1zm-8.6 5.3c-3.1-.9-5.4-2.8-6.2-3.4l4.7-1c1.3 1.4 2.5 2.8 3.1 3.5-.7.3-1.1.5-1.6.9zm3.8 1.4c-.5.1-1 .2-1.5.2-2.9 0-5.2-2.1-5.2-4.7 0-.3 0-.6.1-.9 1.1.1 3.3.3 5.7 1.1-.1.3-.2.6-.3.9 1.7-.2 3.4.1 4.7.8-.5 1.2-1.8 2.1-3.5 2.5z"/></svg>
                 </button>
                 <button class="btn-small btn-warning" @click="handleRegenerateKey(d)" title="重新生成Key">
                   🔄
@@ -547,6 +547,25 @@ th {
 
 .btn-info {
   background: #17a2b8;
+  color: #fff;
+}
+
+.btn-qr {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.btn-wechat {
+  background: #07c160;
+  color: #fff;
+}
+
+.btn-alipay {
+  background: #1677ff;
   color: #fff;
 }
 
