@@ -65,6 +65,7 @@ func main() {
 		protected.PUT("/binding", handler.UpdateBinding)
 		protected.DELETE("/binding", handler.DeleteBinding)
 		protected.GET("/bindings", handler.ListBindings)
+		protected.GET("/orders", handler.ListOrders)
 	}
 
 	log.Printf("V免签支付网关启动 → %s", config.ListenAddr)

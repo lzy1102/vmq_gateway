@@ -137,3 +137,22 @@ func QueryOrderStatus(c *gin.Context) {
 		},
 	})
 }
+
+func ListOrders(c *gin.Context) {
+	keyword := c.Query("keyword")
+	status := c.Query("status")
+	page := 1
+	pageSize := 10
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+	}
+	if ps := c.Query("page_size"); ps != "" {
+		fmt.Sscanf(ps, "%d", &pageSize)
+	}
+	result, err := service.ListOrdersWithPage(c.Request.Context(), keyword, page, pageSize, status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 1, "data": gin.H{"items": result.Items, "total": result.Total, "page": result.Page, "page_size": result.PageSize, "total_pages": result.TotalPages}})
+}

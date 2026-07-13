@@ -165,3 +165,27 @@ export function listBindings(params?: { keyword?: string; page?: number; page_si
     '/admin/bindings' + (qs ? '?' + qs : '')
   )
 }
+
+export interface Order {
+  trade_no: string
+  amount: number
+  status: string
+  device_id: string
+  service_id: string
+  callback_url: string
+  created_at: number
+  paid_at: number
+  expire_at: number
+}
+
+export function listOrders(params?: { keyword?: string; status?: string; page?: number; page_size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.keyword) query.set('keyword', params.keyword)
+  if (params?.status) query.set('status', params.status)
+  if (params?.page) query.set('page', String(params.page))
+  if (params?.page_size) query.set('page_size', String(params.page_size))
+  const qs = query.toString()
+  return request<{ items: Order[]; total: number; page: number; page_size: number; total_pages: number }>(
+    '/admin/orders' + (qs ? '?' + qs : '')
+  )
+}

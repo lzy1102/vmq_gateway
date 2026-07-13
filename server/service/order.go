@@ -11,6 +11,7 @@ import (
 
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
+	"github.com/lzy1102/vmq_gateway/server/store/types"
 )
 
 var mu sync.Mutex
@@ -160,4 +161,27 @@ func ExpireStaleOrders(ctx context.Context) (int64, error) {
 
 func CheckOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error) {
 	return store.DBInstance.ExpireOfflineDevices(ctx, thresholdSec)
+}
+
+func ListOrdersWithPage(ctx context.Context, keyword string, page, pageSize int, status string) (*types.PageResult, error) {
+	conditions := map[string]interface{}{}
+	if status != "" {
+		conditions["status"] = status
+	}
+	var orders []model.Order
+	result, err := store.DBInstance.ListWithPage(ctx, "orders", &orders, page, pageSize, keyword, []string{"trade_no", "device_id"})
+	if err != nil {
+		return nil, err
+	}
+	if status != "" && result != nil {
+		var filtered []model.Order
+		for _, o := range orders {
+			if o.Status == status {
+				filtered = append(filtered, o)
+			}
+		}
+		result.Items = filtered
+		result.Total = int64(len(filtered))
+	}
+	return result, nil
 }

@@ -18,6 +18,10 @@
           <span class="nav-icon">🔗</span>
           <span class="nav-text">服务绑定</span>
         </router-link>
+        <router-link to="/dashboard/orders" class="nav-item" :class="{ active: currentRoute === 'orders' }">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">订单管理</span>
+        </router-link>
       </nav>
       <div class="sidebar-footer">
         <button class="logout-btn" @click="handleLogout">
@@ -45,6 +49,7 @@ const currentRoute = computed(() => {
   if (path.includes('/devices')) return 'devices'
   if (path.includes('/pools')) return 'pools'
   if (path.includes('/bindings')) return 'bindings'
+  if (path.includes('/orders')) return 'orders'
   return ''
 })
 

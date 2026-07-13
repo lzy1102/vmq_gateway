@@ -36,6 +36,11 @@ const router = createRouter({
           path: 'bindings',
           name: 'admin-bindings',
           component: () => import('@/views/BindingManagement.vue')
+        },
+        {
+          path: 'orders',
+          name: 'admin-orders',
+          component: () => import('@/views/OrderManagement.vue')
         }
       ]
     }
