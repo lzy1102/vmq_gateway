@@ -24,6 +24,7 @@ export function queryOrderStatus(orderId: string) {
 export function login(username: string, password: string) {
   return request('/admin/login', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   })
