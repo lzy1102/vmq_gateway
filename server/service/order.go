@@ -163,7 +163,7 @@ func CheckOfflineDevices(ctx context.Context, thresholdSec int64) (int64, error)
 	return store.DBInstance.ExpireOfflineDevices(ctx, thresholdSec)
 }
 
-func ListOrdersWithPage(ctx context.Context, keyword string, page, pageSize int, status string, serviceID string) (*types.PageResult, error) {
+func ListOrdersWithPage(ctx context.Context, keyword string, page, pageSize int, status string, serviceID string, startTime, endTime int64) (*types.PageResult, error) {
 	var orders []model.Order
 	result, err := store.DBInstance.ListWithPage(ctx, "orders", &orders, page, pageSize, keyword, []string{"trade_no", "device_id"})
 	if err != nil {
@@ -175,6 +175,12 @@ func ListOrdersWithPage(ctx context.Context, keyword string, page, pageSize int,
 			continue
 		}
 		if serviceID != "" && o.ServiceID != serviceID {
+			continue
+		}
+		if startTime > 0 && o.CreatedAt < startTime {
+			continue
+		}
+		if endTime > 0 && o.CreatedAt > endTime {
 			continue
 		}
 		filtered = append(filtered, o)

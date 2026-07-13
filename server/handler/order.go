@@ -144,13 +144,20 @@ func ListOrders(c *gin.Context) {
 	serviceID := c.Query("service_id")
 	page := 1
 	pageSize := 10
+	var startTime, endTime int64
 	if p := c.Query("page"); p != "" {
 		fmt.Sscanf(p, "%d", &page)
 	}
 	if ps := c.Query("page_size"); ps != "" {
 		fmt.Sscanf(ps, "%d", &pageSize)
 	}
-	result, err := service.ListOrdersWithPage(c.Request.Context(), keyword, page, pageSize, status, serviceID)
+	if st := c.Query("start_time"); st != "" {
+		fmt.Sscanf(st, "%d", &startTime)
+	}
+	if et := c.Query("end_time"); et != "" {
+		fmt.Sscanf(et, "%d", &endTime)
+	}
+	result, err := service.ListOrdersWithPage(c.Request.Context(), keyword, page, pageSize, status, serviceID, startTime, endTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "查询失败"})
 		return

@@ -30,7 +30,13 @@
             <option v-for="s in serviceList" :key="s" :value="s">{{ s }}</option>
           </select>
         </div>
+        <div class="filter-group date-group">
+          <input v-model="startDate" type="date" placeholder="开始日期" />
+          <span class="date-sep">~</span>
+          <input v-model="endDate" type="date" placeholder="结束日期" />
+        </div>
         <button class="btn-secondary" @click="loadOrders">🔄 刷新</button>
+        <button class="btn-export" @click="handleExport">📥 导出Excel</button>
       </div>
 
       <div v-if="loading" class="loading">加载中...</div>
@@ -99,6 +105,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { listOrders } from '@/api'
 import type { Order } from '@/api'
+import * as XLSX from 'xlsx'
 
 const orders = ref<Order[]>([])
 const total = ref(0)
@@ -111,6 +118,8 @@ const searchKeyword = ref('')
 const statusFilter = ref('')
 const serviceFilter = ref('')
 const serviceList = ref<string[]>([])
+const startDate = ref('')
+const endDate = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -153,16 +162,67 @@ function statusText(s: string) {
   return map[s] || s
 }
 
+async function handleExport() {
+  loading.value = true
+  try {
+    const params: Record<string, any> = {
+      keyword: searchKeyword.value,
+      status: statusFilter.value,
+      service_id: serviceFilter.value,
+      page: 1,
+      page_size: 10000
+    }
+    if (startDate.value) {
+      params.start_time = Math.floor(new Date(startDate.value + 'T00:00:00').getTime() / 1000)
+    }
+    if (endDate.value) {
+      params.end_time = Math.floor(new Date(endDate.value + 'T23:59:59').getTime() / 1000)
+    }
+    const resp = await listOrders(params)
+    if (resp.code !== 1 || !resp.data?.items?.length) {
+      toast('没有可导出的数据', 'error')
+      return
+    }
+    const rows = resp.data.items.map((o: Order) => ({
+      '订单号': o.trade_no,
+      '设备ID': o.device_id,
+      '池ID': o.pool_id || '-',
+      '服务ID': o.service_id || '-',
+      '金额(元)': (o.amount / 100).toFixed(2),
+      '支付方式': o.pay_type === 'wechat' ? '微信' : o.pay_type === 'alipay' ? '支付宝' : o.pay_type,
+      '状态': statusText(o.status),
+      '创建时间': o.created_at ? new Date(o.created_at * 1000).toLocaleString('zh-CN') : '-',
+      '支付时间': o.paid_at ? new Date(o.paid_at * 1000).toLocaleString('zh-CN') : '-',
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, '订单')
+    const now = new Date()
+    const filename = `订单导出_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`
+    XLSX.writeFile(wb, filename)
+    toast(`已导出 ${rows.length} 条订单`)
+  } finally {
+    loading.value = false
+  }
+}
+
 async function loadOrders() {
   loading.value = true
   try {
-    const resp = await listOrders({
+    const params: Record<string, any> = {
       keyword: searchKeyword.value,
       status: statusFilter.value,
       service_id: serviceFilter.value,
       page: currentPage.value,
       page_size: pageSize.value
-    })
+    }
+    if (startDate.value) {
+      params.start_time = Math.floor(new Date(startDate.value + 'T00:00:00').getTime() / 1000)
+    }
+    if (endDate.value) {
+      params.end_time = Math.floor(new Date(endDate.value + 'T23:59:59').getTime() / 1000)
+    }
+    const resp = await listOrders(params)
     if (resp.code === 1 && resp.data) {
       orders.value = resp.data.items || []
       total.value = resp.data.total
@@ -178,7 +238,7 @@ async function loadOrders() {
   }
 }
 
-watch([searchKeyword, statusFilter, serviceFilter, pageSize], () => {
+watch([searchKeyword, statusFilter, serviceFilter, startDate, endDate, pageSize], () => {
   currentPage.value = 1
   loadOrders()
 })
@@ -278,6 +338,38 @@ onMounted(loadOrders)
 
 .btn-secondary:hover {
   background: #e9ecef;
+}
+
+.date-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-group input[type="date"] {
+  padding: 9px 10px;
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.date-sep {
+  color: var(--text-secondary);
+}
+
+.btn-export {
+  padding: 10px 16px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-export:hover {
+  background: #1d4ed8;
 }
 
 .loading {
