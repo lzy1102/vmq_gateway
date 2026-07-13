@@ -557,16 +557,16 @@ th {
   width: 32px;
   height: 32px;
   padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-dark);
 }
 
 .btn-wechat {
-  background: #07c160;
-  color: #fff;
+  color: #07c160;
 }
 
 .btn-alipay {
-  background: #1677ff;
-  color: #fff;
+  color: #1677ff;
 }
 
 .pagination {

@@ -33,7 +33,7 @@
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn-primary" @click="handleAddBinding" :disabled="!newServiceId.trim() || !newCallbackUrl.trim()">
+        <button class="btn-primary" @click="handleAddBinding" :disabled="!newServiceId.trim()">
           创建绑定
         </button>
       </div>
@@ -260,12 +260,11 @@ async function loadData() {
 
 async function handleAddBinding() {
   const serviceId = newServiceId.value.trim()
-  const callbackUrl = newCallbackUrl.value.trim()
-  if (!serviceId || !callbackUrl) return
+  if (!serviceId) return
   
   const resp = await addBinding(
     serviceId,
-    callbackUrl,
+    newCallbackUrl.value.trim() || undefined,
     newBindDevice.value.trim() || undefined,
     newBindPool.value.trim() || undefined
   )

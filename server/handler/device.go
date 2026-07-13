@@ -246,7 +246,7 @@ func ListPools(c *gin.Context) {
 
 type addBindingReq struct {
 	ServiceID   string `json:"service_id" binding:"required"`
-	CallbackURL string `json:"callback_url" binding:"required"`
+	CallbackURL string `json:"callback_url"`
 	DeviceID    string `json:"device_id"`
 	PoolID      string `json:"pool_id"`
 }
@@ -275,7 +275,7 @@ func AddBinding(c *gin.Context) {
 
 type updateBindingReq struct {
 	ServiceID   string `json:"service_id" binding:"required"`
-	CallbackURL string `json:"callback_url" binding:"required"`
+	CallbackURL string `json:"callback_url"`
 	DeviceID    *string `json:"device_id"`
 	PoolID      *string `json:"pool_id"`
 }
