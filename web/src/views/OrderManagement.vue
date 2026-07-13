@@ -37,6 +37,7 @@
           <thead>
             <tr>
               <th>订单号</th>
+              <th>服务</th>
               <th>申请金额</th>
               <th>支付金额</th>
               <th>状态</th>
@@ -50,6 +51,7 @@
               <td class="order-id">
                 <code @click="copyKey(o.trade_no)" :title="o.trade_no">{{ o.trade_no }}</code>
               </td>
+              <td>{{ o.service_id || '-' }}</td>
               <td>{{ formatAmount(o.amount) }}</td>
               <td>{{ formatAmount(o.amount) }}</td>
               <td>
