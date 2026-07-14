@@ -22,6 +22,10 @@
           <span class="nav-icon">📋</span>
           <span class="nav-text">订单管理</span>
         </router-link>
+        <router-link to="/dashboard/tutorial" class="nav-item" :class="{ active: currentRoute === 'tutorial' }">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">接入教程</span>
+        </router-link>
       </nav>
       <div class="sidebar-footer">
         <button class="logout-btn" @click="handleLogout">
