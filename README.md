@@ -2,6 +2,8 @@
 
 基于 Android APP 监听支付宝/微信收款通知，HTTP 回调服务端完成订单匹配。无第三方支付 API 依赖，只需一台安卓手机。
 
+📖 **[接入文档](docs/integration.md)** | 📚 **[管理后台 - 接入教程](http://186.241.107.44/dashboard/tutorial)**
+
 ## 架构
 
 ```
