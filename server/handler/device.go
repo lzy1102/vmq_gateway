@@ -249,6 +249,7 @@ type addBindingReq struct {
 	CallbackURL string `json:"callback_url"`
 	DeviceID    string `json:"device_id"`
 	PoolID      string `json:"pool_id"`
+	IPWhitelist string `json:"ip_whitelist"`
 }
 
 func AddBinding(c *gin.Context) {
@@ -265,6 +266,7 @@ func AddBinding(c *gin.Context) {
 		DeviceID:    req.DeviceID,
 		PoolID:      req.PoolID,
 		APIKey:      apiKey,
+		IPWhitelist: req.IPWhitelist,
 	}
 	if err := service.AddBinding(c.Request.Context(), binding); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "添加失败"})
@@ -278,6 +280,7 @@ type updateBindingReq struct {
 	CallbackURL string `json:"callback_url"`
 	DeviceID    *string `json:"device_id"`
 	PoolID      *string `json:"pool_id"`
+	IPWhitelist *string `json:"ip_whitelist"`
 }
 
 func UpdateBinding(c *gin.Context) {
@@ -294,6 +297,9 @@ func UpdateBinding(c *gin.Context) {
 	}
 	if req.PoolID != nil {
 		updates["pool_id"] = *req.PoolID
+	}
+	if req.IPWhitelist != nil {
+		updates["ip_whitelist"] = *req.IPWhitelist
 	}
 	if err := service.UpdateBinding(c.Request.Context(), req.ServiceID, updates); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "更新失败"})

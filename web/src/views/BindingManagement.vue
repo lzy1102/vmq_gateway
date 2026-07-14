@@ -31,6 +31,11 @@
             <option v-for="p in pools" :key="p.pool_id" :value="p.pool_id">{{ p.name }}</option>
           </select>
         </div>
+        <div class="form-group full-width">
+          <label>IP 白名单（可选，逗号分隔，留空则不限制）</label>
+          <input v-model="newIPWhitelist" placeholder="例如：1.2.3.4,5.6.7.0/24" />
+          <span class="hint">支持 IP 和 CIDR 格式，如 192.168.1.0/24</span>
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn-primary" @click="handleAddBinding" :disabled="!newServiceId.trim()">
@@ -69,6 +74,7 @@
               <th>回调URL</th>
               <th>绑定设备</th>
               <th>绑定池</th>
+              <th>IP 白名单</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -88,6 +94,10 @@
               <td>
                 <span v-if="b.pool_id" class="binding-tag pool">{{ b.pool_id }}</span>
                 <span v-else class="no-binding">-</span>
+              </td>
+              <td>
+                <span v-if="b.ip_whitelist" class="ip-list">{{ b.ip_whitelist }}</span>
+                <span v-else class="no-binding">不限制</span>
               </td>
               <td class="actions">
                 <button class="btn-icon" @click="openEdit(b)" title="编辑">✏️</button>
@@ -151,6 +161,11 @@
             <option v-for="p in pools" :key="p.pool_id" :value="p.pool_id">{{ p.name }}</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>IP 白名单（逗号分隔，留空则不限制）</label>
+          <input v-model="editIPWhitelist" placeholder="例如：1.2.3.4,5.6.7.0/24" />
+          <span class="hint">支持 IP 和 CIDR 格式</span>
+        </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeEdit">取消</button>
           <button class="btn-primary" @click="handleUpdateBinding">保存</button>
@@ -181,6 +196,7 @@ const newServiceId = ref('')
 const newCallbackUrl = ref('')
 const newBindDevice = ref('')
 const newBindPool = ref('')
+const newIPWhitelist = ref('')
 
 // 搜索
 const searchKeyword = ref('')
@@ -266,7 +282,8 @@ async function handleAddBinding() {
     serviceId,
     newCallbackUrl.value.trim() || undefined,
     newBindDevice.value.trim() || undefined,
-    newBindPool.value.trim() || undefined
+    newBindPool.value.trim() || undefined,
+    newIPWhitelist.value.trim() || undefined
   )
   
   if (resp.code === 1) {
@@ -275,6 +292,7 @@ async function handleAddBinding() {
     newCallbackUrl.value = ''
     newBindDevice.value = ''
     newBindPool.value = ''
+    newIPWhitelist.value = ''
     loadData()
   } else {
     toast(resp.msg || '创建失败', 'error')
@@ -285,12 +303,14 @@ const editingBinding = ref<Binding | null>(null)
 const editCallbackUrl = ref('')
 const editBindDevice = ref('')
 const editBindPool = ref('')
+const editIPWhitelist = ref('')
 
 function openEdit(b: Binding) {
   editingBinding.value = b
   editCallbackUrl.value = b.callback_url
   editBindDevice.value = b.device_id || ''
   editBindPool.value = b.pool_id || ''
+  editIPWhitelist.value = b.ip_whitelist || ''
 }
 
 function closeEdit() {
@@ -303,7 +323,8 @@ async function handleUpdateBinding() {
     editingBinding.value.service_id,
     editCallbackUrl.value.trim(),
     editBindDevice.value.trim() || undefined,
-    editBindPool.value.trim() || undefined
+    editBindPool.value.trim() || undefined,
+    editIPWhitelist.value.trim() || undefined
   )
   if (resp.code === 1) {
     toast('绑定已更新')
@@ -510,6 +531,23 @@ th {
 
 .no-binding {
   color: var(--text-secondary);
+}
+
+.ip-list {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: #fef3c7;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 .info-card {

@@ -125,10 +125,11 @@ export function listPools(params?: { keyword?: string; page?: number; page_size?
   )
 }
 
-export function addBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string) {
+export function addBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string, ipWhitelist?: string) {
   const body: Record<string, string> = { service_id: serviceId, callback_url: callbackUrl }
   if (deviceId) body.device_id = deviceId
   if (poolId) body.pool_id = poolId
+  if (ipWhitelist) body.ip_whitelist = ipWhitelist
   return request('/admin/binding', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -136,10 +137,11 @@ export function addBinding(serviceId: string, callbackUrl: string, deviceId?: st
   })
 }
 
-export function updateBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string) {
+export function updateBinding(serviceId: string, callbackUrl: string, deviceId?: string, poolId?: string, ipWhitelist?: string) {
   const body: Record<string, string> = { service_id: serviceId, callback_url: callbackUrl }
   if (deviceId !== undefined) body.device_id = deviceId
   if (poolId !== undefined) body.pool_id = poolId
+  if (ipWhitelist !== undefined) body.ip_whitelist = ipWhitelist
   return request('/admin/binding', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

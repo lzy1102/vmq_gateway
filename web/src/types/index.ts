@@ -36,4 +36,5 @@ export interface Binding {
   device_id: string
   pool_id: string
   api_key: string
+  ip_whitelist: string
 }

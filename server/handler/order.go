@@ -46,6 +46,11 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	if err := service.CheckIPWhitelist(ctx, req.ServiceID, c.ClientIP()); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"code": 0, "msg": err.Error()})
+		return
+	}
+
 	order, device, err := service.CreateOrder(ctx, req.Amount, req.ServiceID, req.CallbackURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 0, "msg": "创建订单失败"})

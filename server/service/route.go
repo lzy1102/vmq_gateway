@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
 
 	"github.com/lzy1102/vmq_gateway/server/model"
 	"github.com/lzy1102/vmq_gateway/server/store"
@@ -132,6 +134,47 @@ func VerifyAPIKey(ctx context.Context, serviceID, apiKey string) error {
 		return fmt.Errorf("API Key 错误")
 	}
 	return nil
+}
+
+// CheckIPWhitelist 检查 IP 是否在白名单中
+func CheckIPWhitelist(ctx context.Context, serviceID, clientIP string) error {
+	var binding model.Binding
+	if err := store.DBInstance.FindByField(ctx, "bindings", "service_id", serviceID, &binding); err != nil {
+		return fmt.Errorf("服务不存在")
+	}
+	return CheckIPAllowed(binding.IPWhitelist, clientIP)
+}
+
+// CheckIPAllowed 判断 IP 是否在白名单中（白名单为空则放行）
+func CheckIPAllowed(whitelist, clientIP string) error {
+	whitelist = strings.TrimSpace(whitelist)
+	if whitelist == "" {
+		return nil
+	}
+	clientIP = strings.TrimSpace(clientIP)
+	if ip := net.ParseIP(clientIP); ip == nil {
+		return fmt.Errorf("无效的客户端 IP")
+	}
+	for _, allowed := range strings.Split(whitelist, ",") {
+		allowed = strings.TrimSpace(allowed)
+		if allowed == "" {
+			continue
+		}
+		if strings.Contains(allowed, "/") {
+			_, cidr, err := net.ParseCIDR(allowed)
+			if err != nil {
+				continue
+			}
+			if cidr.Contains(net.ParseIP(clientIP)) {
+				return nil
+			}
+		} else {
+			if allowed == clientIP {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("IP %s 不在白名单中", clientIP)
 }
 
 // DeleteDevice 删除设备
