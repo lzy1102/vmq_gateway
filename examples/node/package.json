@@ -1,0 +1,13 @@
+{
+  "name": "vmq-gateway-example",
+  "version": "1.0.0",
+  "description": "V免签支付网关 Node.js 接入示例",
+  "type": "module",
+  "scripts": {
+    "poll": "node poll.js",
+    "callback": "node callback.js"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
